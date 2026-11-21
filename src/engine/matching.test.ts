@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isMatch, scorePair } from "./matching";
+import { bestAssignment, isMatch, scorePair } from "./matching";
 import { OWN_GOAL, type GoalEvent, type GoalGuess } from "./types";
 
 // Helpers: build a real goal / a guess, overriding only the fields a test cares about.
@@ -108,5 +108,61 @@ describe("scorePair: own goals (SPEC 5.3)", () => {
     expect(
       scorePair(guess({ scorer: OWN_GOAL, assist: "gerrard" }), { ...ownGoal, assist: "gerrard" }),
     ).toEqual(pts(3, 0, 0));
+  });
+});
+
+describe("bestAssignment", () => {
+  const crespo39 = goal({ minute: 39, assist: "shevchenko" });
+  const crespo44 = goal({ minute: 44, assist: "kaka" });
+
+  it("picks the assignment with the most points (SPEC 6.3)", () => {
+    // 43'+Kaká -> 44' (7) and no-details -> 39' (3) = 10, beats the swap (3 + 3 = 6).
+    const guesses = [guess({ assist: "kaka", minute: "43" }), guess()];
+    expect(bestAssignment(guesses, [crespo39, crespo44])).toEqual([1, 0]);
+  });
+
+  it("is not greedy: gives up a good match when another guess needs that goal more", () => {
+    // Guess 0 alone would prefer 44' (5 vs 3), but guess 1 gets 7 there vs 3 at 39'.
+    // Greedy: 5 + 3 = 8. Best: 3 + 7 = 10.
+    const guesses = [guess({ minute: "42" }), guess({ assist: "kaka", minute: "45" })];
+    expect(bestAssignment(guesses, [crespo39, crespo44])).toEqual([0, 1]);
+  });
+
+  it("matches each real goal at most once (guessed twice, scored once)", () => {
+    expect(bestAssignment([guess(), guess()], [crespo44])).toEqual([0, null]);
+  });
+
+  it("leaves unmatched guesses as null", () => {
+    expect(bestAssignment([guess({ scorer: "pirlo" }), guess({ scorer: null })], [crespo44])).toEqual([
+      null,
+      null,
+    ]);
+  });
+
+  it("breaks ties deterministically: earlier guesses get earlier goals", () => {
+    expect(bestAssignment([guess(), guess()], [crespo39, crespo44])).toEqual([0, 1]);
+  });
+
+  it("with two own goals and one OWN_GOAL guess, picks the one that earns the minute bonus", () => {
+    const og10 = goal({ minute: 10, scorer: "riise", assist: null, ownGoal: true });
+    const og80 = goal({ minute: 80, scorer: "hamann", assist: null, ownGoal: true });
+    expect(bestAssignment([guess({ scorer: OWN_GOAL, minute: "79" })], [og10, og80])).toEqual([1]);
+  });
+
+  it("handles empty inputs", () => {
+    expect(bestAssignment([], [crespo44])).toEqual([]);
+    expect(bestAssignment([guess()], [])).toEqual([null]);
+  });
+
+  it("stays fast with many guesses for the same scorer", () => {
+    const goals = Array.from({ length: 12 }, (_, k) => goal({ minute: 5 + k * 7 }));
+    const guesses = Array.from({ length: 12 }, () => guess());
+    const assignment = bestAssignment(guesses, goals);
+    expect(assignment).toEqual(goals.map((_, k) => k));
+  });
+
+  it("rejects more than 30 goals instead of giving wrong results", () => {
+    const goals = Array.from({ length: 31 }, () => goal());
+    expect(() => bestAssignment([guess()], goals)).toThrow();
   });
 });
