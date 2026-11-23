@@ -4,7 +4,9 @@ import type { Score } from "./engine/types";
 import { HomePage } from "./ui/HomePage";
 import { MatchIntro } from "./ui/MatchIntro";
 import { ScoreGuessScreen } from "./ui/ScoreGuessScreen";
+import { homeBoards, matchBoards, type BoardPanel } from "./ui/stadium/adBoards";
 import type { CrowdPalette } from "./ui/stadium/crowd";
+import { PitchBackground } from "./ui/stadium/PitchBackground";
 import { StadiumBackground } from "./ui/stadium/StadiumBackground";
 
 type Screen = "home" | "intro" | "guess-score";
@@ -32,6 +34,7 @@ export function App() {
         : { kind: "split", home: match.homeTeam.colors, away: match.awayTeam.colors },
     [isHome],
   );
+  const boards = useMemo<BoardPanel[]>(() => (isHome ? homeBoards() : matchBoards(match)), [isHome]);
 
   let content;
   if (screen === "intro") {
@@ -57,7 +60,8 @@ export function App() {
 
   return (
     <>
-      <StadiumBackground palette={crowd} />
+      <PitchBackground />
+      <StadiumBackground palette={crowd} boards={boards} />
       {content}
     </>
   );

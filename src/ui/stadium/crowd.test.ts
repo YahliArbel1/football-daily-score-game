@@ -43,6 +43,10 @@ describe("rowSizesFor", () => {
     expect(sizes.reduce((sum, s) => sum + s * 2, 0)).toBeLessThanOrEqual(80);
   });
 
+  it("can start from bigger fans in the back row", () => {
+    expect(rowSizesFor(80, 3).slice(0, 4)).toEqual([3, 3, 4, 4]);
+  });
+
   it("returns no rows when there is no room", () => {
     expect(rowSizesFor(3)).toEqual([]);
   });

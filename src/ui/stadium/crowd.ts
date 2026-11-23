@@ -72,13 +72,13 @@ function fanColors(palette: CrowdPalette, x: number, width: number, random: () =
 
 /**
  * Fan sizes for each row, back to front, that fit in `height` pixels.
- * Rows grow by 1 every two rows (2, 2, 3, 3, 4, ...) for a sense of depth.
+ * Rows grow by 1 every two rows (e.g. 2, 2, 3, 3, 4, ...) for a sense of depth.
  */
-export function rowSizesFor(height: number): number[] {
+export function rowSizesFor(height: number, backRowSize = 2): number[] {
   const sizes: number[] = [];
   let used = 0;
   for (let i = 0; ; i++) {
-    const size = 2 + Math.floor(i / 2);
+    const size = backRowSize + Math.floor(i / 2);
     if (used + size * 2 > height) return sizes;
     sizes.push(size);
     used += size * 2;
