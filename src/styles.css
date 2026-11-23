@@ -486,11 +486,58 @@ button {
   color: var(--accent);
 }
 
-.no-goals {
-  padding: 18px 20px;
+/* Two halves: one per team. Side by side on wide screens, like the two
+   halves of the pitch behind them; stacked on phones. */
+.halves {
+  display: grid;
+  gap: 22px;
+}
+
+@media (min-width: 900px) {
+  .screen.goal-details {
+    max-width: 920px;
+  }
+
+  .halves {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
+/* --c-* variables come from the team's colors (GoalsScreen.tsx). */
+.half-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 10px 16px;
+  color: var(--c-text);
+  background: var(--c-primary);
+  border-bottom: 4px solid var(--c-secondary);
+  border-radius: 10px;
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.35);
+}
+
+.half-team {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.half-count {
+  text-shadow: none;
+  opacity: 0.85;
+}
+
+.half-empty {
+  margin: 0;
+  padding: 16px;
   font-weight: 700;
+  color: var(--muted);
   background: rgba(8, 21, 15, 0.85);
-  border: 2px solid var(--panel-edge);
+  border: 2px dashed var(--panel-edge);
   border-radius: 12px;
 }
 
@@ -502,7 +549,7 @@ button {
   list-style: none;
 }
 
-/* --c-* variables come from the team's colors (GoalsScreen.tsx). */
+/* --c-* variables come from the team's half (GoalsScreen.tsx). */
 .goal-card {
   overflow: visible;
   background: rgba(8, 21, 15, 0.92);

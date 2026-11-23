@@ -1,4 +1,4 @@
-import type { GoalGuess, Match, Score } from "../engine/types";
+import type { GoalGuess, Match, Score, Side } from "../engine/types";
 import { numberWithinTeam, setScorer } from "./goalGuesses";
 import { PlayerPicker } from "./PlayerPicker";
 import { BackButton, colorVars, CompetitionBar } from "./shared";
@@ -12,7 +12,12 @@ interface GoalsScreenProps {
 }
 
 export function GoalsScreen({ match, score, goals, onChange, onBack }: GoalsScreenProps) {
-  const teamOf = (goal: GoalGuess) => (goal.team === "home" ? match.homeTeam : match.awayTeam);
+  // Each team gets its own half: home on the left, away on the right
+  // (one under the other on narrow screens).
+  const halves: { side: Side; team: Match["homeTeam"] }[] = [
+    { side: "home", team: match.homeTeam },
+    { side: "away", team: match.awayTeam },
+  ];
 
   return (
     <main className="screen goal-details">
@@ -24,32 +29,47 @@ export function GoalsScreen({ match, score, goals, onChange, onBack }: GoalsScre
         Your guess: {match.homeTeam.name} {score.home}–{score.away} {match.awayTeam.name}
       </p>
 
-      {goals.length === 0 ? (
-        <p className="no-goals">A goalless draw — no goals to fill in.</p>
-      ) : (
-        <ol className="goal-list">
-          {goals.map((goal, i) => {
-            const team = teamOf(goal);
-            return (
-              <li key={i} className="goal-card" style={colorVars(team.colors)}>
-                <div className="goal-card-header pixel">
-                  {team.name} · Goal {numberWithinTeam(goals, i)}
-                </div>
-                <div className="goal-card-body">
-                  <PlayerPicker
-                    label="Scorer"
-                    placeholder="Choose scorer"
-                    players={team.players}
-                    value={goal.scorer}
-                    onChange={(scorer) => onChange(setScorer(goals, i, scorer))}
-                    allowOwnGoal
-                  />
-                </div>
-              </li>
-            );
-          })}
-        </ol>
-      )}
+      <div className="halves">
+        {halves.map(({ side, team }) => {
+          // Keep each goal's position in the full list, so changes go to the right goal.
+          const teamGoals = goals
+            .map((goal, index) => ({ goal, index }))
+            .filter(({ goal }) => goal.team === side);
+
+          return (
+            <section key={side} className="half" style={colorVars(team.colors)}>
+              <header className="half-header">
+                <span className="half-team">{team.name}</span>
+                <span className="half-count pixel">
+                  {teamGoals.length} {teamGoals.length === 1 ? "goal" : "goals"}
+                </span>
+              </header>
+
+              {teamGoals.length === 0 ? (
+                <p className="half-empty">No goals</p>
+              ) : (
+                <ol className="goal-list">
+                  {teamGoals.map(({ goal, index }) => (
+                    <li key={index} className="goal-card">
+                      <div className="goal-card-header pixel">Goal {numberWithinTeam(goals, index)}</div>
+                      <div className="goal-card-body">
+                        <PlayerPicker
+                          label="Scorer"
+                          placeholder="Choose scorer"
+                          players={team.players}
+                          value={goal.scorer}
+                          onChange={(scorer) => onChange(setScorer(goals, index, scorer))}
+                          allowOwnGoal
+                        />
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </section>
+          );
+        })}
+      </div>
 
       <p className="hint">Not sure? You can leave a scorer empty. It just won't earn points.</p>
 
