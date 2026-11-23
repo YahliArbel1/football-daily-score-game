@@ -7,15 +7,32 @@ export interface Score {
   away: number;
 }
 
+/**
+ * The most goals a player can guess for one team. Fixed for every match, so it
+ * never hints at the real score. Every match's real score must fit under it
+ * (checked by validateMatch).
+ */
+export const MAX_GOALS_PER_TEAM = 9;
+
+/** A player in the matchday squad (starting XI + substitutes). */
 export interface Player {
   id: string;
   name: string;
   number: number;
+  /** true for a substitute (on the bench at kick-off); missing for starters. */
+  sub?: boolean;
+}
+
+/** Hex colors, e.g. "#c8102e". Used only for display. */
+export interface Colors {
+  primary: string;
+  secondary: string;
 }
 
 export interface Team {
   id: string;
   name: string;
+  colors: Colors;
   players: Player[];
 }
 
@@ -37,6 +54,9 @@ export interface GoalEvent {
 export interface Match {
   id: string;
   pool: "daily" | "quick";
+  /** Key into the competitions list (src/data/competitions.ts), e.g. "ucl". */
+  competitionId: string;
+  /** Display name for this match, including the stage, e.g. "UEFA Champions League — Final". */
   competition: string;
   date: string;
   venue: string;
