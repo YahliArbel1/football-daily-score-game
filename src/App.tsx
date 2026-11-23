@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { istanbul2005 } from "./engine/fixtures/istanbul-2005";
-import type { Score } from "./engine/types";
+import type { GoalGuess, Score } from "./engine/types";
+import { resizeGoalGuesses } from "./ui/goalGuesses";
+import { GoalsScreen } from "./ui/GoalsScreen";
 import { HomePage } from "./ui/HomePage";
 import { MatchIntro } from "./ui/MatchIntro";
 import { ScoreGuessScreen } from "./ui/ScoreGuessScreen";
@@ -9,7 +11,7 @@ import type { CrowdPalette } from "./ui/stadium/crowd";
 import { PitchBackground } from "./ui/stadium/PitchBackground";
 import { StadiumBackground } from "./ui/stadium/StadiumBackground";
 
-type Screen = "home" | "intro" | "guess-score";
+type Screen = "home" | "intro" | "guess-score" | "guess-goals";
 
 // Until daily selection exists, the Daily Game is always Istanbul 2005.
 const match = istanbul2005;
@@ -23,6 +25,13 @@ const HOME_CROWD: CrowdPalette = {
 export function App() {
   const [screen, setScreen] = useState<Screen>("home");
   const [score, setScore] = useState<Score>({ home: 0, away: 0 });
+  const [goals, setGoals] = useState<GoalGuess[]>([]);
+
+  // One goal card per guessed goal; changing the score keeps scorers already chosen.
+  const changeScore = (next: Score) => {
+    setScore(next);
+    setGoals((current) => resizeGoalGuesses(current, next));
+  };
 
   // Home page: mixed crowd. Match screens: each half of the stand in one team's colors.
   // useMemo keeps the same object between renders, so the crowd isn't rebuilt on every click.
@@ -50,8 +59,19 @@ export function App() {
       <ScoreGuessScreen
         match={match}
         score={score}
-        onChange={setScore}
+        onChange={changeScore}
         onBack={() => setScreen("intro")}
+        onNext={() => setScreen("guess-goals")}
+      />
+    );
+  } else if (screen === "guess-goals") {
+    content = (
+      <GoalsScreen
+        match={match}
+        score={score}
+        goals={goals}
+        onChange={setGoals}
+        onBack={() => setScreen("guess-score")}
       />
     );
   } else {

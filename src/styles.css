@@ -479,6 +479,181 @@ button {
   }
 }
 
+/* ---------- Goals (scorers) ---------- */
+
+.your-guess {
+  margin: -8px 0 20px;
+  color: var(--accent);
+}
+
+.no-goals {
+  padding: 18px 20px;
+  font-weight: 700;
+  background: rgba(8, 21, 15, 0.85);
+  border: 2px solid var(--panel-edge);
+  border-radius: 12px;
+}
+
+.goal-list {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* --c-* variables come from the team's colors (GoalsScreen.tsx). */
+.goal-card {
+  overflow: visible;
+  background: rgba(8, 21, 15, 0.92);
+  border: 2px solid var(--panel-edge);
+  border-left: 8px solid var(--c-primary);
+  border-radius: 12px;
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.35);
+  animation: rise 0.35s ease-out both;
+}
+
+.goal-card-header {
+  padding: 8px 14px;
+  color: var(--c-text);
+  background: var(--c-primary);
+  border-bottom: 3px solid var(--c-secondary);
+  border-radius: 6px 10px 0 0;
+}
+
+.goal-card-body {
+  padding: 14px;
+}
+
+.hint {
+  margin: 16px 0 0;
+  font-size: 0.95rem;
+  color: var(--muted);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+/* Player picker */
+
+.picker {
+  display: grid;
+  gap: 6px;
+}
+
+.picker-label {
+  color: var(--muted);
+}
+
+.picker-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-align: left;
+  color: var(--muted);
+  background: var(--panel);
+  border: 2px solid var(--panel-edge);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.picker-button.chosen {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.picker-button:hover,
+.picker-button:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.picker-arrow {
+  color: var(--accent);
+}
+
+.picker-panel {
+  padding: 10px;
+  background: #0a1610;
+  border: 2px solid var(--accent);
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
+}
+
+.picker-search {
+  width: 100%;
+  padding: 10px 12px;
+  font: inherit;
+  color: var(--text);
+  background: var(--panel);
+  border: 2px solid var(--panel-edge);
+  border-radius: 8px;
+}
+
+.picker-search:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.picker-list {
+  display: grid;
+  gap: 2px;
+  max-height: 260px;
+  margin: 8px 0 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.picker-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  font-weight: 700;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.picker-option:hover,
+.picker-option:focus-visible {
+  color: var(--accent-ink);
+  background: var(--accent);
+  outline: none;
+}
+
+.picker-option.selected {
+  color: var(--accent);
+}
+
+.picker-option.own-goal {
+  font-style: italic;
+}
+
+.picker-option.clear {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.picker-number {
+  min-width: 2.2em;
+  text-align: right;
+  opacity: 0.7;
+  text-shadow: none;
+}
+
+.picker-empty {
+  padding: 10px 12px;
+  color: var(--muted);
+}
+
 /* ---------- Motion ---------- */
 
 @keyframes rise {

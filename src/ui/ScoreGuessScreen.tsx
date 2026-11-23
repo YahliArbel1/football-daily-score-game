@@ -17,9 +17,10 @@ interface ScoreGuessScreenProps {
   score: Score;
   onChange: (score: Score) => void;
   onBack: () => void;
+  onNext: () => void;
 }
 
-export function ScoreGuessScreen({ match, score, onChange, onBack }: ScoreGuessScreenProps) {
+export function ScoreGuessScreen({ match, score, onChange, onBack, onNext }: ScoreGuessScreenProps) {
   const change = (side: Side, delta: number) =>
     onChange({ ...score, [side]: changeGoals(score[side], delta) });
 
@@ -74,9 +75,9 @@ export function ScoreGuessScreen({ match, score, onChange, onBack }: ScoreGuessS
         ▸ {describeScore(score, match.homeTeam.name, match.awayTeam.name)}
       </p>
 
-      <button type="button" className="arcade-btn primary next-btn" disabled>
+      <button type="button" className="arcade-btn primary next-btn" onClick={onNext}>
         <span className="mode-title">Next ▸</span>
-        <span className="mode-text">Scorers — coming soon</span>
+        <span className="mode-text">Pick the scorers</span>
       </button>
     </main>
   );
