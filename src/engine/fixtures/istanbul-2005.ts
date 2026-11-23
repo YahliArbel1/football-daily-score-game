@@ -5,12 +5,14 @@ import type { Guess, Match } from "../types";
 export const istanbul2005: Match = {
   id: "2005-05-25-ucl-final-acm-liv",
   pool: "daily",
+  competitionId: "ucl",
   competition: "UEFA Champions League — Final",
   date: "2005-05-25",
   venue: "Atatürk Olympic Stadium, Istanbul",
   homeTeam: {
     id: "acm",
     name: "AC Milan",
+    colors: { primary: "#fb090b", secondary: "#000000" },
     players: [
       { id: "maldini", name: "Paolo Maldini", number: 3 },
       { id: "crespo", name: "Hernán Crespo", number: 11 },
@@ -22,6 +24,7 @@ export const istanbul2005: Match = {
   awayTeam: {
     id: "liv",
     name: "Liverpool",
+    colors: { primary: "#c8102e", secondary: "#ffffff" },
     players: [
       { id: "gerrard", name: "Steven Gerrard", number: 8 },
       { id: "smicer", name: "Vladimír Šmicer", number: 7 },

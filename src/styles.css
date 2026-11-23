@@ -207,6 +207,7 @@ button {
 /* ---------- Match intro ---------- */
 
 .back {
+  display: block;
   padding: 8px 0;
   background: none;
   border: none;
@@ -229,19 +230,19 @@ button {
   font-size: 0.95rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #fff;
-  background: var(--live);
+  /* --c-* variables come from the competition's colors (MatchIntro.tsx). */
+  color: var(--c-text, #fff);
+  background: var(--c-primary, var(--live));
+  border-left: 6px solid var(--c-secondary, #fff);
   border-radius: 4px;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.35);
   animation: slide-in 0.4s ease-out both;
 }
 
-.live-dot {
-  width: 8px;
-  height: 8px;
+.trophy {
+  width: 18px;
+  height: 18px;
   flex: none;
-  background: #fff;
-  border-radius: 50%;
-  animation: blink 1.2s steps(2, start) infinite;
 }
 
 .matchup {
@@ -250,16 +251,37 @@ button {
   margin-bottom: 28px;
 }
 
+/* --c-* variables come from the team's colors (MatchIntro.tsx). */
 .team-box {
+  position: relative;
+  overflow: hidden;
   display: grid;
   gap: 4px;
-  padding: 16px 20px 18px;
-  background: var(--panel);
-  border: 2px solid var(--panel-edge);
-  border-left: 8px solid var(--accent);
+  padding: 16px 84px 18px 22px;
+  color: var(--c-text);
+  background: var(--c-primary);
+  border: 3px solid var(--c-secondary);
+  border-left-width: 14px;
   border-radius: 10px;
-  box-shadow: 0 6px 0 #071209;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.45);
   animation: slide-in 0.45s 0.1s ease-out both;
+}
+
+/* Two kit stripes in the secondary color on the right edge. */
+.team-box::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 16px;
+  width: 52px;
+  background: linear-gradient(
+    90deg,
+    var(--c-secondary) 0 16px,
+    transparent 16px 36px,
+    var(--c-secondary) 36px 52px
+  );
+  transform: skewX(-12deg);
 }
 
 .team-box + .vs + .team-box {
@@ -267,7 +289,7 @@ button {
 }
 
 .side {
-  color: var(--muted);
+  opacity: 0.75;
 }
 
 .team-name {

@@ -112,12 +112,14 @@
 {
   "id": "2005-05-25-ucl-final-acm-liv",
   "pool": "daily",
+  "competitionId": "ucl",
   "competition": "UEFA Champions League — Final",
   "date": "2005-05-25",
   "venue": "Atatürk Olympic Stadium, Istanbul",
   "homeTeam": {
     "id": "acm",
     "name": "AC Milan",
+    "colors": { "primary": "#fb090b", "secondary": "#000000" },
     "players": [
       { "id": "maldini", "name": "Paolo Maldini", "number": 3 },
       { "id": "crespo", "name": "Hernán Crespo", "number": 11 },
@@ -129,6 +131,7 @@
   "awayTeam": {
     "id": "liv",
     "name": "Liverpool",
+    "colors": { "primary": "#c8102e", "secondary": "#ffffff" },
     "players": [
       { "id": "gerrard", "name": "Steven Gerrard", "number": 8 },
       { "id": "smicer", "name": "Vladimír Šmicer", "number": 7 },
@@ -152,6 +155,10 @@
 
 הערות למבנה:
 - `pool`: `"daily"` או `"quick"`. כך מובטח שמשחק לא יופיע בשני המצבים.
+- `competitionId`: מפתח לרשימת המפעלים המשותפת (שם וצבעים), למשל `"ucl"`. מפעל שלא ברשימה מוצג בצבעי ברירת מחדל.
+  `competition` הוא שם התצוגה של המשחק הספציפי, כולל השלב ("— Final").
+- `colors`: צבעי הקבוצה לתצוגה (`primary` ראשי, `secondary` משני), בפורמט `#rrggbb`. צבע הטקסט (לבן/שחור) נבחר אוטומטית לפי בהירות הצבע הראשי.
+- **לוגואים**: לא משתמשים בלוגואים או בסמלים רשמיים של מפעלים וקבוצות (סימני מסחר מוגנים). במקומם: צבעים + אייקון כללי משלנו.
 - `players`: הרשימה הרלוונטית שממנה המשתמש בוחר (הרכב + ספסל). בדוגמה היא מקוצרת.
 - `events`: ממוינים כרונולוגית, וזה גם המקור לאנימציה.
 - `finalScore`: התוצאה בסיום 90 הדקות + תוספת זמן (המשחק האמיתי הוכרע בפנדלים, והם לא נכללים).

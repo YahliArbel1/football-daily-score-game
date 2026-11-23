@@ -13,9 +13,16 @@ export interface Player {
   number: number;
 }
 
+/** Hex colors, e.g. "#c8102e". Used only for display. */
+export interface Colors {
+  primary: string;
+  secondary: string;
+}
+
 export interface Team {
   id: string;
   name: string;
+  colors: Colors;
   players: Player[];
 }
 
@@ -37,6 +44,9 @@ export interface GoalEvent {
 export interface Match {
   id: string;
   pool: "daily" | "quick";
+  /** Key into the competitions list (src/data/competitions.ts), e.g. "ucl". */
+  competitionId: string;
+  /** Display name for this match, including the stage, e.g. "UEFA Champions League — Final". */
   competition: string;
   date: string;
   venue: string;
