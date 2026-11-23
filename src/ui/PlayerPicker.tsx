@@ -13,6 +13,8 @@ interface PlayerPickerProps {
   onChange: (value: string | null) => void;
   /** Show "Own goal" as the first option. */
   allowOwnGoal?: boolean;
+  /** When set, the picker can't be opened and shows this text instead. */
+  disabledText?: string;
 }
 
 /** A button that opens a searchable list of players. */
@@ -23,6 +25,7 @@ export function PlayerPicker({
   value,
   onChange,
   allowOwnGoal = false,
+  disabledText,
 }: PlayerPickerProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -51,6 +54,17 @@ export function PlayerPicker({
           { title: "Starting XI", players: starters },
           { title: "Substitutes", players: subs },
         ];
+
+  if (disabledText) {
+    return (
+      <div className="picker">
+        <span className="picker-label pixel">{label}</span>
+        <button type="button" className="picker-button" disabled>
+          <span>{disabledText}</span>
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="picker">

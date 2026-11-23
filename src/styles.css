@@ -569,7 +569,65 @@ button {
 }
 
 .goal-card-body {
+  display: grid;
+  gap: 14px;
   padding: 14px;
+}
+
+/* Assist and minute side by side, the minute field narrow. */
+.goal-extras {
+  display: grid;
+  grid-template-columns: 1fr 128px;
+  gap: 12px;
+  align-items: start;
+}
+
+@media (max-width: 420px) {
+  .goal-extras {
+    grid-template-columns: 1fr;
+  }
+}
+
+.minute-field {
+  display: grid;
+  gap: 6px;
+}
+
+.minute-input {
+  width: 100%;
+  padding: 12px 12px;
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--panel);
+  border: 2px solid var(--panel-edge);
+  border-radius: 10px;
+}
+
+.minute-input::placeholder {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.minute-input:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.minute-input.valid {
+  border-color: #3ddc84;
+}
+
+.minute-input.invalid {
+  border-color: var(--live);
+}
+
+.minute-error {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #ff8fa8;
 }
 
 .hint {
@@ -612,10 +670,17 @@ button {
   border-color: var(--accent);
 }
 
-.picker-button:hover,
+.picker-button:hover:not(:disabled),
 .picker-button:focus-visible {
   border-color: var(--accent);
   outline: none;
+}
+
+.picker-button:disabled {
+  font-size: 0.9rem;
+  font-style: italic;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .picker-arrow {

@@ -2,11 +2,15 @@ import { describe, expect, it } from "vitest";
 import { istanbul2005 } from "../engine/fixtures/istanbul-2005";
 import { OWN_GOAL, type GoalGuess } from "../engine/types";
 import {
+  assistOptions,
   emptyGoal,
+  minuteStatus,
   normalizeName,
   numberWithinTeam,
   resizeGoalGuesses,
   searchPlayers,
+  setAssist,
+  setMinute,
   setScorer,
   splitSquad,
 } from "./goalGuesses";
@@ -89,6 +93,92 @@ describe("setScorer", () => {
   it("does not change the original list", () => {
     setScorer(goals, 0, "maldini");
     expect(goals[0]!.scorer).toBe("crespo");
+  });
+
+  it("clears the assist when the assist player becomes the scorer", () => {
+    expect(setScorer(goals, 0, "kaka")[0]).toMatchObject({ scorer: "kaka", assist: null });
+  });
+
+  it("keeps the assist when the scorer is cleared", () => {
+    expect(setScorer(goals, 0, null)[0]).toMatchObject({ scorer: null, assist: "kaka" });
+  });
+});
+
+describe("setAssist", () => {
+  const goals: GoalGuess[] = [
+    { team: "home", scorer: "crespo", assist: null, minute: null },
+    { team: "home", scorer: OWN_GOAL, assist: null, minute: null },
+  ];
+
+  it("sets and clears the assist", () => {
+    const withAssist = setAssist(goals, 0, "kaka");
+    expect(withAssist[0]!.assist).toBe("kaka");
+    expect(setAssist(withAssist, 0, null)[0]!.assist).toBeNull();
+  });
+
+  it("works before a scorer is chosen", () => {
+    const empty: GoalGuess[] = [emptyGoal("away")];
+    expect(setAssist(empty, 0, "riise")[0]!.assist).toBe("riise");
+  });
+
+  it("refuses an assist on an own goal", () => {
+    expect(setAssist(goals, 1, "kaka")[1]!.assist).toBeNull();
+  });
+
+  it("refuses the scorer as their own assist", () => {
+    expect(setAssist(goals, 0, "crespo")[0]!.assist).toBeNull();
+  });
+
+  it("changes only the chosen goal", () => {
+    expect(setAssist(goals, 0, "kaka")[1]).toEqual(goals[1]);
+  });
+});
+
+describe("setMinute", () => {
+  const goals: GoalGuess[] = [emptyGoal("home")];
+
+  it("stores the minute as typed, trimmed", () => {
+    expect(setMinute(goals, 0, " 45+2 ")[0]!.minute).toBe("45+2");
+  });
+
+  it("stores an empty field as null (skipped)", () => {
+    expect(setMinute(goals, 0, "")[0]!.minute).toBeNull();
+    expect(setMinute(goals, 0, "   ")[0]!.minute).toBeNull();
+  });
+
+  it("keeps invalid text, so the user can see and fix it", () => {
+    expect(setMinute(goals, 0, "95")[0]!.minute).toBe("95");
+  });
+});
+
+describe("minuteStatus", () => {
+  it("is empty for nothing typed", () => {
+    expect(minuteStatus(null)).toBe("empty");
+    expect(minuteStatus("")).toBe("empty");
+    expect(minuteStatus("  ")).toBe("empty");
+  });
+
+  it("accepts 1-90 and stoppage time after 45 or 90", () => {
+    for (const ok of ["1", "43", "90", "45+2", "90+3", " 44 "]) expect(minuteStatus(ok)).toBe("valid");
+  });
+
+  it("rejects everything else (SPEC 5.4)", () => {
+    for (const bad of ["abc", "0", "95", "30+2", "45+", "45+0", "-5", "4 5"]) {
+      expect(minuteStatus(bad)).toBe("invalid");
+    }
+  });
+});
+
+describe("assistOptions", () => {
+  it("leaves out the scorer", () => {
+    const ids = assistOptions(milan, "crespo").map((p) => p.id);
+    expect(ids).not.toContain("crespo");
+    expect(ids).toHaveLength(milan.length - 1);
+  });
+
+  it("offers everyone when there is no scorer or it's an own goal", () => {
+    expect(assistOptions(milan, null)).toEqual(milan);
+    expect(assistOptions(milan, OWN_GOAL)).toEqual(milan);
   });
 });
 

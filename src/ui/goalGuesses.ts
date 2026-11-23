@@ -1,6 +1,7 @@
 // Pure logic for the goals screen: keeping the list of goal guesses in step
 // with the guessed score, and searching players by name.
 
+import { parseMinute } from "../engine/minute";
 import { OWN_GOAL, type GoalGuess, type Player, type Score, type Side } from "../engine/types";
 
 export function emptyGoal(team: Side): GoalGuess {
@@ -27,15 +28,56 @@ export function numberWithinTeam(goals: GoalGuess[], index: number): number {
   return goals.slice(0, index + 1).filter((g) => g.team === team).length;
 }
 
+/** Returns a copy of `goals` with the goal at `index` changed by `change`. */
+function updateGoal(goals: GoalGuess[], index: number, change: (g: GoalGuess) => GoalGuess): GoalGuess[] {
+  return goals.map((g, i) => (i === index ? change(g) : g));
+}
+
 /**
- * Sets the scorer of one goal (null = not chosen). An own goal has no assist
- * (SPEC 5.3), so choosing one also clears the assist.
+ * Sets the scorer of one goal (null = not chosen). The assist is cleared when
+ * it no longer makes sense: an own goal has no assist (SPEC 5.3), and a
+ * player can't assist their own goal.
  */
 export function setScorer(goals: GoalGuess[], index: number, scorer: string | null): GoalGuess[] {
-  return goals.map((g, i) => {
-    if (i !== index) return g;
-    return { ...g, scorer, assist: scorer === OWN_GOAL ? null : g.assist };
+  return updateGoal(goals, index, (g) => ({
+    ...g,
+    scorer,
+    assist: scorer === OWN_GOAL || (scorer !== null && scorer === g.assist) ? null : g.assist,
+  }));
+}
+
+/**
+ * Sets the assist of one goal (null = no assist). Ignored for an own goal, or
+ * when the assist would be the scorer themself.
+ */
+export function setAssist(goals: GoalGuess[], index: number, assist: string | null): GoalGuess[] {
+  return updateGoal(goals, index, (g) => {
+    if (assist !== null && (g.scorer === OWN_GOAL || assist === g.scorer)) return g;
+    return { ...g, assist };
   });
+}
+
+/**
+ * Sets the minute of one goal exactly as typed (e.g. "45+2"), trimmed.
+ * An empty field is stored as null (skipped). Invalid text is kept as is: it
+ * just won't earn the minute bonus (SPEC 5.4).
+ */
+export function setMinute(goals: GoalGuess[], index: number, text: string): GoalGuess[] {
+  const minute = text.trim() === "" ? null : text.trim();
+  return updateGoal(goals, index, (g) => ({ ...g, minute }));
+}
+
+export type MinuteStatus = "empty" | "valid" | "invalid";
+
+/** Whether a typed minute is empty, valid ("43", "45+2", "90+3") or invalid. Uses the engine's parser. */
+export function minuteStatus(text: string | null): MinuteStatus {
+  if (text === null || text.trim() === "") return "empty";
+  return parseMinute(text.trim()) ? "valid" : "invalid";
+}
+
+/** Players who can be chosen as the assist: the team without the scorer. */
+export function assistOptions(players: Player[], scorer: string | null): Player[] {
+  return players.filter((p) => p.id !== scorer);
 }
 
 // Letters that don't split into "base letter + accent" in Unicode.
