@@ -1,17 +1,19 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { istanbul2005 } from "./engine/fixtures/istanbul-2005";
 import type { GoalGuess, Score } from "./engine/types";
 import { resizeGoalGuesses } from "./ui/goalGuesses";
 import { GoalsScreen } from "./ui/GoalsScreen";
 import { HomePage } from "./ui/HomePage";
 import { MatchIntro } from "./ui/MatchIntro";
+import { buildResults, type ResultsView } from "./ui/results";
+import { ResultsScreen } from "./ui/ResultsScreen";
 import { ScoreGuessScreen } from "./ui/ScoreGuessScreen";
 import { homeBoards, matchBoards, type BoardPanel } from "./ui/stadium/adBoards";
 import type { CrowdPalette } from "./ui/stadium/crowd";
 import { PitchBackground } from "./ui/stadium/PitchBackground";
 import { StadiumBackground } from "./ui/stadium/StadiumBackground";
 
-type Screen = "home" | "intro" | "guess-score" | "guess-goals";
+type Screen = "home" | "intro" | "guess-score" | "guess-goals" | "results";
 
 // Until daily selection exists, the Daily Game is always Istanbul 2005.
 const match = istanbul2005;
@@ -26,11 +28,25 @@ export function App() {
   const [screen, setScreen] = useState<Screen>("home");
   const [score, setScore] = useState<Score>({ home: 0, away: 0 });
   const [goals, setGoals] = useState<GoalGuess[]>([]);
+  // Set once the guess is submitted; after that the guess can't change (SPEC 3, step 6).
+  // For now this lasts until the page is reloaded; saving it comes with daily selection.
+  const [results, setResults] = useState<ResultsView | null>(null);
+
+  // Every new screen starts at the top. (Braces matter: an effect may only
+  // return a cleanup function, so it must not return scrollTo's result.)
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [screen]);
 
   // One goal card per guessed goal; changing the score keeps scorers already chosen.
   const changeScore = (next: Score) => {
     setScore(next);
     setGoals((current) => resizeGoalGuesses(current, next));
+  };
+
+  const submit = () => {
+    setResults(buildResults(match, { matchId: match.id, score, goals }));
+    setScreen("results");
   };
 
   // Home page: mixed crowd. Match screens: each half of the stand in one team's colors.
@@ -46,7 +62,9 @@ export function App() {
   const boards = useMemo<BoardPanel[]>(() => (isHome ? homeBoards() : matchBoards(match)), [isHome]);
 
   let content;
-  if (screen === "intro") {
+  if (screen === "results" && results) {
+    content = <ResultsScreen match={match} view={results} onHome={() => setScreen("home")} />;
+  } else if (screen === "intro") {
     content = (
       <MatchIntro
         match={match}
@@ -72,10 +90,12 @@ export function App() {
         goals={goals}
         onChange={setGoals}
         onBack={() => setScreen("guess-score")}
+        onSubmit={submit}
       />
     );
   } else {
-    content = <HomePage onPlayDaily={() => setScreen("intro")} />;
+    // Once submitted, the Daily Game opens the results instead of a new guess.
+    content = <HomePage onPlayDaily={() => setScreen(results ? "results" : "intro")} />;
   }
 
   return (

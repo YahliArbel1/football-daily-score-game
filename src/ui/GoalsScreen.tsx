@@ -50,9 +50,10 @@ interface GoalsScreenProps {
   goals: GoalGuess[];
   onChange: (goals: GoalGuess[]) => void;
   onBack: () => void;
+  onSubmit: () => void;
 }
 
-export function GoalsScreen({ match, score, goals, onChange, onBack }: GoalsScreenProps) {
+export function GoalsScreen({ match, score, goals, onChange, onBack, onSubmit }: GoalsScreenProps) {
   // Each team gets its own half: home on the left, away on the right
   // (one under the other on narrow screens).
   const halves: { side: Side; team: Match["homeTeam"] }[] = [
@@ -128,9 +129,9 @@ export function GoalsScreen({ match, score, goals, onChange, onBack }: GoalsScre
 
       <p className="hint">Not sure? Leave any field empty. It just won't earn points.</p>
 
-      <button type="button" className="arcade-btn primary next-btn" disabled>
+      <button type="button" className="arcade-btn primary next-btn" onClick={onSubmit}>
         <span className="mode-title">Submit guess ▸</span>
-        <span className="mode-text">Results — coming soon</span>
+        <span className="mode-text">Locks your guess. No changes after this.</span>
       </button>
     </main>
   );
