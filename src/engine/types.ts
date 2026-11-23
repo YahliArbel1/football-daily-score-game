@@ -7,6 +7,13 @@ export interface Score {
   away: number;
 }
 
+/**
+ * The most goals a player can guess for one team. Fixed for every match, so it
+ * never hints at the real score. Every match's real score must fit under it
+ * (checked by validateMatch).
+ */
+export const MAX_GOALS_PER_TEAM = 9;
+
 export interface Player {
   id: string;
   name: string;
