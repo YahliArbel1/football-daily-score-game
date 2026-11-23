@@ -17,25 +17,34 @@ const dateFormat = new Intl.DateTimeFormat("en-GB", {
 export function MatchIntro({ match, onBack }: MatchIntroProps) {
   return (
     <main className="screen intro">
-      <button type="button" className="back" onClick={onBack}>
-        ← Back
+      <button type="button" className="back pixel" onClick={onBack}>
+        ◂ Back
       </button>
 
-      <p className="competition">{match.competition}</p>
+      <p className="competition-bar">
+        <span className="live-dot" aria-hidden="true" />
+        {match.competition}
+      </p>
 
-      <div className="teams">
-        <span className="team">{match.homeTeam.name}</span>
-        <span className="vs">vs</span>
-        <span className="team">{match.awayTeam.name}</span>
+      <div className="matchup">
+        <div className="team-box">
+          <span className="side pixel">Home</span>
+          <span className="team-name">{match.homeTeam.name}</span>
+        </div>
+        <span className="vs">VS</span>
+        <div className="team-box">
+          <span className="side pixel">Away</span>
+          <span className="team-name">{match.awayTeam.name}</span>
+        </div>
       </div>
 
-      <dl className="details">
+      <dl className="lower-third">
         <div>
-          <dt>Date</dt>
+          <dt className="pixel">Date</dt>
           <dd>{dateFormat.format(new Date(match.date))}</dd>
         </div>
         <div>
-          <dt>Stadium</dt>
+          <dt className="pixel">Stadium</dt>
           <dd>{match.venue}</dd>
         </div>
       </dl>
