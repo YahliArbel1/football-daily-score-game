@@ -1,0 +1,170 @@
+:root {
+  --bg: #f6f7f4;
+  --surface: #ffffff;
+  --text: #16201a;
+  --muted: #5b675f;
+  --border: #dde2dc;
+  --accent: #1f7a45;
+  --accent-soft: #e4f1e8;
+
+  color-scheme: light dark;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111613;
+    --surface: #1a211d;
+    --text: #e8ede9;
+    --muted: #9aa69e;
+    --border: #2c3630;
+    --accent: #4cc27c;
+    --accent-soft: #1d3326;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+.screen {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 48px 16px;
+}
+
+/* Home page */
+
+.home-header h1 {
+  margin: 0 0 8px;
+  font-size: 2rem;
+  line-height: 1.2;
+}
+
+.tagline {
+  margin: 0 0 32px;
+  color: var(--muted);
+}
+
+.modes {
+  display: grid;
+  gap: 12px;
+}
+
+.mode-card {
+  display: grid;
+  gap: 4px;
+  padding: 20px;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.mode-card:hover:not(:disabled) {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.mode-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.mode-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.mode-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.mode-text {
+  color: var(--muted);
+}
+
+.badge {
+  margin-left: 6px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
+/* Match intro */
+
+.back {
+  padding: 6px 0;
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.back:hover {
+  color: var(--text);
+}
+
+.competition {
+  margin: 24px 0 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.teams {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 32px;
+}
+
+.team {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.vs {
+  color: var(--muted);
+}
+
+.details {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.details dt {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.details dd {
+  margin: 0;
+  font-weight: 500;
+}
