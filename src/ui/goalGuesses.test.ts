@@ -8,6 +8,7 @@ import {
   resizeGoalGuesses,
   searchPlayers,
   setScorer,
+  splitSquad,
 } from "./goalGuesses";
 
 const milan = istanbul2005.homeTeam.players;
@@ -118,8 +119,17 @@ describe("searchPlayers", () => {
   });
 
   it("matches any part of the name, any case", () => {
+    const players = [
+      { id: "pirlo", name: "Andrea Pirlo", number: 21 },
+      { id: "sheva", name: "Andriy Shevchenko", number: 7 },
+      { id: "dida", name: "Dida", number: 1 },
+    ];
+    expect(searchPlayers(players, "ANDR").map((p) => p.id)).toEqual(["pirlo", "sheva"]);
     expect(searchPlayers(liverpool, "GER").map((p) => p.id)).toEqual(["gerrard"]);
-    expect(searchPlayers(milan, "andr").map((p) => p.id)).toEqual(["pirlo", "shevchenko"]);
+  });
+
+  it("finds substitutes too", () => {
+    expect(searchPlayers(liverpool, "cisse").map((p) => p.id)).toEqual(["cisse"]);
   });
 
   it("finds a player by shirt number", () => {
@@ -128,5 +138,20 @@ describe("searchPlayers", () => {
 
   it("returns nothing when no one matches", () => {
     expect(searchPlayers(milan, "messi")).toEqual([]);
+  });
+});
+
+describe("splitSquad", () => {
+  it("separates the starting XI from the substitutes, keeping order", () => {
+    const { starters, subs } = splitSquad(liverpool);
+    expect(starters).toHaveLength(11);
+    expect(subs).toHaveLength(7);
+    expect(starters[0]!.id).toBe("dudek");
+    expect(subs.map((p) => p.id)).toContain("smicer");
+  });
+
+  it("treats everyone as a starter when no one is marked as a sub", () => {
+    const players = [{ id: "a", name: "A", number: 1 }];
+    expect(splitSquad(players)).toEqual({ starters: players, subs: [] });
   });
 });

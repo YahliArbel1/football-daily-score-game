@@ -138,8 +138,27 @@ describe("validateMatch", () => {
 
     it("rejects duplicate player ids", () => {
       expectProblem(
-        broken((m) => m.awayTeam.players.push({ id: "kaka", name: "Someone Else", number: 99 })),
+        broken((m) => m.awayTeam.players.push({ id: "kaka", name: "Someone Else", number: 99, sub: true })),
         'player id "kaka" appears more than once',
+      );
+    });
+
+    it("requires exactly 11 starters per team", () => {
+      expectProblem(
+        broken((m) => (m.homeTeam.players.find((p) => p.id === "dida")!.sub = true)),
+        "AC Milan has 10 starters; it must have 11",
+      );
+      expectProblem(
+        broken((m) => delete m.awayTeam.players.find((p) => p.id === "smicer")!.sub),
+        "Liverpool has 12 starters; it must have 11",
+      );
+    });
+
+    it("rejects two players with the same shirt number in one team", () => {
+      // The old mistake: Šmicer listed with Kewell's number 7.
+      expectProblem(
+        broken((m) => (m.awayTeam.players.find((p) => p.id === "smicer")!.number = 7)),
+        "Liverpool has two players with shirt number 7",
       );
     });
   });

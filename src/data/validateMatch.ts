@@ -48,6 +48,19 @@ export function validateMatch(
     seen.add(player.id);
   }
 
+  // Each squad: exactly 11 starters, and no two players with the same shirt number.
+  for (const side of ["home", "away"] as const) {
+    const { name, players } = teams[side];
+    const starters = players.filter((p) => !p.sub).length;
+    if (starters !== 11) problems.push(`${name} has ${starters} starters; it must have 11`);
+
+    const numbers = new Set<number>();
+    for (const p of players) {
+      if (numbers.has(p.number)) problems.push(`${name} has two players with shirt number ${p.number}`);
+      numbers.add(p.number);
+    }
+  }
+
   const playsFor = (side: Side, id: string) => teams[side].players.some((p) => p.id === id);
 
   match.events.forEach((goal, i) => {

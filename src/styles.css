@@ -649,6 +649,11 @@ button {
   text-shadow: none;
 }
 
+.picker-group {
+  padding: 10px 12px 4px;
+  color: var(--accent);
+}
+
 .picker-empty {
   padding: 10px 12px;
   color: var(--muted);

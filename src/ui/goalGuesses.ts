@@ -51,6 +51,14 @@ export function normalizeName(name: string): string {
     .trim();
 }
 
+/** The starting XI and the substitutes, each in squad order. */
+export function splitSquad(players: Player[]): { starters: Player[]; subs: Player[] } {
+  return {
+    starters: players.filter((p) => !p.sub),
+    subs: players.filter((p) => p.sub),
+  };
+}
+
 /** Players whose name contains the query (ignoring case and accents), or whose shirt number is the query. */
 export function searchPlayers(players: Player[], query: string): Player[] {
   const q = normalizeName(query);

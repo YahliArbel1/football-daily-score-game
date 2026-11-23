@@ -14,10 +14,13 @@ export interface Score {
  */
 export const MAX_GOALS_PER_TEAM = 9;
 
+/** A player in the matchday squad (starting XI + substitutes). */
 export interface Player {
   id: string;
   name: string;
   number: number;
+  /** true for a substitute (on the bench at kick-off); missing for starters. */
+  sub?: boolean;
 }
 
 /** Hex colors, e.g. "#c8102e". Used only for display. */

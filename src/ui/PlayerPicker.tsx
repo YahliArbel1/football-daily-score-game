@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { OWN_GOAL, type Player } from "../engine/types";
-import { searchPlayers } from "./goalGuesses";
+import { searchPlayers, splitSquad } from "./goalGuesses";
 
 interface PlayerPickerProps {
   /** What the field is for, e.g. "Scorer". */
@@ -42,6 +42,16 @@ export function PlayerPicker({
     value === OWN_GOAL ? "Own goal" : players.find((p) => p.id === value)?.name ?? null;
   const results = searchPlayers(players, query);
 
+  // With no search: "Starting XI" and "Substitutes" headings. While searching: one flat list.
+  const { starters, subs } = splitSquad(players);
+  const groups =
+    query.trim() || subs.length === 0
+      ? [{ title: "", players: results }]
+      : [
+          { title: "Starting XI", players: starters },
+          { title: "Substitutes", players: subs },
+        ];
+
   return (
     <div className="picker">
       <span className="picker-label pixel">{label}</span>
@@ -77,17 +87,22 @@ export function PlayerPicker({
                 </button>
               </li>
             )}
-            {results.map((p) => (
-              <li key={p.id}>
-                <button
-                  type="button"
-                  className={`picker-option${p.id === value ? " selected" : ""}`}
-                  onClick={() => choose(p.id)}
-                >
-                  <span className="picker-number pixel">{p.number}</span>
-                  {p.name}
-                </button>
-              </li>
+            {groups.map((group) => (
+              <Fragment key={group.title}>
+                {group.title && <li className="picker-group pixel">{group.title}</li>}
+                {group.players.map((p) => (
+                  <li key={p.id}>
+                    <button
+                      type="button"
+                      className={`picker-option${p.id === value ? " selected" : ""}`}
+                      onClick={() => choose(p.id)}
+                    >
+                      <span className="picker-number pixel">{p.number}</span>
+                      {p.name}
+                    </button>
+                  </li>
+                ))}
+              </Fragment>
             ))}
             {results.length === 0 && <li className="picker-empty">No player found</li>}
             {value !== null && (
