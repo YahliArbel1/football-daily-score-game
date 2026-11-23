@@ -243,7 +243,7 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  margin: 24px 0 20px;
+  margin: 18px 0 20px;
   padding: 8px 14px;
   font-weight: 700;
   font-size: 0.95rem;
@@ -266,8 +266,7 @@ button {
 
 .matchup {
   display: grid;
-  gap: 10px;
-  margin-bottom: 28px;
+  margin-bottom: 26px;
 }
 
 /* --c-* variables come from the team's colors (MatchIntro.tsx). */
@@ -276,7 +275,7 @@ button {
   overflow: hidden;
   display: grid;
   gap: 4px;
-  padding: 16px 84px 18px 22px;
+  padding: 12px 84px 14px 22px;
   color: var(--c-text);
   background: var(--c-primary);
   border: 3px solid var(--c-secondary);
@@ -313,15 +312,19 @@ button {
 
 .team-name {
   font-family: var(--font-display);
-  font-size: clamp(2.2rem, 10vw, 3.25rem);
+  font-size: clamp(1.9rem, 8.5vw, 2.7rem);
   line-height: 1;
   text-transform: uppercase;
   overflow-wrap: anywhere;
 }
 
+/* VS overlaps the edges of both team boxes instead of taking its own row. */
 .vs {
+  position: relative;
+  z-index: 1;
   justify-self: center;
-  padding: 4px 14px;
+  margin: -6px 0;
+  padding: 2px 14px;
   font-family: var(--font-display);
   font-size: 1.6rem;
   line-height: 1.2;
@@ -333,9 +336,9 @@ button {
 
 .lower-third {
   display: grid;
-  gap: 14px;
+  gap: 10px 20px;
   margin: 0;
-  padding: 18px 20px;
+  padding: 14px 18px;
   background: rgba(8, 21, 15, 0.85);
   border-top: 4px solid var(--accent);
   border-radius: 0 0 10px 10px;
@@ -349,8 +352,15 @@ button {
 
 .lower-third dd {
   margin: 0;
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   font-weight: 700;
+}
+
+/* Date and stadium side by side when there's room. */
+@media (min-width: 480px) {
+  .lower-third {
+    grid-template-columns: auto 1fr;
+  }
 }
 
 .start-btn {
