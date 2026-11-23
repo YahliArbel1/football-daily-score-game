@@ -1,3 +1,10 @@
 node_modules/
 dist/
 coverage/
+
+# Installed agent skills (reinstall from skills-lock.json)
+.agents/
+.claude/skills/
+
+# Personal Claude Code settings
+.claude/settings.local.json
