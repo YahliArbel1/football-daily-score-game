@@ -1,8 +1,14 @@
+import { barcelona1999 } from "../engine/fixtures/barcelona-1999";
+import { beloHorizonte2014 } from "../engine/fixtures/belo-horizonte-2014";
 import { istanbul2005 } from "../engine/fixtures/istanbul-2005";
 import type { Match } from "../engine/types";
 
 /**
  * Every match in the game. Each match's `pool` ("daily" or "quick") decides
  * which mode it appears in, so a match is never in both.
+ *
+ * The Daily Game goes through the daily matches in this order, one per day
+ * (src/engine/daily.ts). Add new daily matches ONLY AT THE END: inserting one
+ * earlier would change which match every later day gets.
  */
-export const matches: Match[] = [istanbul2005];
+export const matches: Match[] = [istanbul2005, barcelona1999, beloHorizonte2014];
