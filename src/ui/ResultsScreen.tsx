@@ -11,6 +11,8 @@ interface ResultsScreenProps {
   /** Today's Daily Game label, e.g. "#1 · NOV 27". */
   label: string;
   onHome: () => void;
+  /** Plays the match animation again from the start. */
+  onReplay: () => void;
 }
 
 /** ✓ +3 for a hit, ✗ for a miss, – when there was nothing to guess. */
@@ -118,7 +120,7 @@ function TeamHalf({ team }: { team: TeamResults }) {
   );
 }
 
-export function ResultsScreen({ match, view, day, label, onHome }: ResultsScreenProps) {
+export function ResultsScreen({ match, view, day, label, onHome, onReplay }: ResultsScreenProps) {
   const { summary } = view;
 
   return (
@@ -151,6 +153,11 @@ export function ResultsScreen({ match, view, day, label, onHome }: ResultsScreen
         <span className="total-number">{view.total}</span>
         <span className="total-label pixel">pts</span>
       </div>
+
+      <button type="button" className="arcade-btn secondary replay-btn" onClick={onReplay}>
+        <span className="mode-title">Watch again</span>
+        <span className="mode-text">Replay the match from kick-off</span>
+      </button>
 
       <NextDaily day={day} />
 

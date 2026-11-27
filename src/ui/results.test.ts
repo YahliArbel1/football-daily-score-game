@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { istanbul2005, istanbul2005Guess } from "../engine/fixtures/istanbul-2005";
 import { OWN_GOAL, type Guess, type Match } from "../engine/types";
-import { buildResults, minuteLabel, playerName } from "./results";
+import { buildResults, cardsByEvent, minuteLabel, playerName } from "./results";
 
 describe("minuteLabel", () => {
   it("formats normal minutes and stoppage time", () => {
@@ -21,6 +21,28 @@ describe("playerName", () => {
     expect(playerName(istanbul2005, OWN_GOAL)).toBe("Own goal");
     expect(playerName(istanbul2005, null)).toBeNull();
     expect(playerName(istanbul2005, "nobody")).toBe("nobody");
+  });
+});
+
+describe("cardsByEvent", () => {
+  const view = buildResults(istanbul2005, istanbul2005Guess);
+  const cards = cardsByEvent(istanbul2005, view);
+
+  it("gives one card per real goal, in time order across both teams", () => {
+    expect(cards).toHaveLength(istanbul2005.events.length);
+    expect(cards.map((c) => c.minute)).toEqual(istanbul2005.events.map((e) => minuteLabel(e)));
+  });
+
+  it("keeps each goal's hits: Crespo 44' is the full house", () => {
+    const crespo44 = cards[istanbul2005.events.findIndex((e) => e.minute === 44)]!;
+    expect(crespo44.scorer.real).toBe("Hernán Crespo");
+    expect(crespo44.badge).toBe("full-house");
+    expect(crespo44.points).toBeGreaterThan(0);
+  });
+
+  it("is the same card object the results screen shows", () => {
+    const [milan] = view.teams;
+    expect(cards[0]).toBe(milan.cards[0]);
   });
 });
 

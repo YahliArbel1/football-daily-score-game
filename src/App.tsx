@@ -36,6 +36,8 @@ export function App() {
   const [screen, setScreen] = useState<Screen>("home");
   const [score, setScore] = useState<Score>({ home: 0, away: 0 });
   const [goals, setGoals] = useState<GoalGuess[]>([]);
+  // Counts how many times the animation has started; a new number restarts it from 0'.
+  const [animationRun, setAnimationRun] = useState(0);
   // Set once the guess is submitted; after that the guess can't change (SPEC 3, step 6).
   // A guess saved earlier today is loaded back, so a reload shows the results again.
   const [results, setResults] = useState<ResultsView | null>(() => {
@@ -77,8 +79,11 @@ export function App() {
   const boards = useMemo<BoardPanel[]>(() => (isHome ? homeBoards() : matchBoards(match)), [isHome]);
 
   let content;
-  if (screen === "animation") {
-    content = <MatchAnimation match={match} onDone={() => setScreen("results")} />;
+  if (screen === "animation" && results) {
+    // key: a new run re-mounts the animation, so it starts again from 0'.
+    content = (
+      <MatchAnimation key={animationRun} match={match} view={results} onDone={() => setScreen("results")} />
+    );
   } else if (screen === "results" && results) {
     content = (
       <ResultsScreen
@@ -87,6 +92,10 @@ export function App() {
         day={day}
         label={label}
         onHome={() => setScreen("home")}
+        onReplay={() => {
+          setAnimationRun((n) => n + 1);
+          setScreen("animation");
+        }}
       />
     );
   } else if (screen === "intro") {

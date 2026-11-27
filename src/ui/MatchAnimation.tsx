@@ -4,14 +4,26 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Match } from "../engine/types";
-import { minuteLabel, playerName } from "./results";
+import { cardsByEvent, minuteLabel, playerName, type FieldResult, type ResultsView } from "./results";
 import { colorVars, CompetitionBar } from "./shared";
 import { advance, buildTimeline, SPEEDS, timelineAt, type Speed } from "./timeline";
 
 interface MatchAnimationProps {
   match: Match;
+  /** Your guess against the real match: which goals and fields you hit. */
+  view: ResultsView;
   /** Called when the animation ends or is skipped. */
   onDone: () => void;
+}
+
+/** A green "✓ +3" next to a field you got right; nothing otherwise. */
+function Hit({ field }: { field: FieldResult }) {
+  if (field.status !== "hit") return null;
+  return (
+    <span className="hit-mark">
+      <span aria-label="Correct">✓</span> +{field.points}
+    </span>
+  );
 }
 
 /** How long "Full time" stays on screen before the results open. */
@@ -19,8 +31,9 @@ const FULL_TIME_HOLD_MS = 1200;
 /** Longest step between two frames, so a tab left in the background doesn't jump ahead. */
 const MAX_FRAME_MS = 100;
 
-export function MatchAnimation({ match, onDone }: MatchAnimationProps) {
+export function MatchAnimation({ match, view, onDone }: MatchAnimationProps) {
   const timeline = useMemo(() => buildTimeline(match), [match]);
+  const cards = useMemo(() => cardsByEvent(match, view), [match, view]);
   const [elapsed, setElapsed] = useState(0);
   const [speed, setSpeed] = useState<Speed>(1);
 
@@ -61,6 +74,11 @@ export function MatchAnimation({ match, onDone }: MatchAnimationProps) {
   const shownGoals = timeline.goals.slice(0, frame.shown);
   const current = frame.current ? match.events[frame.current.eventIndex] : null;
   const currentTeam = current && (current.team === "home" ? match.homeTeam : match.awayTeam);
+  const currentCard = frame.current ? cards[frame.current.eventIndex]! : null;
+  // Your points so far: each goal's points as it happens, and the result's at full time.
+  const points =
+    shownGoals.reduce((sum, g) => sum + cards[g.eventIndex]!.points, 0) +
+    (frame.finished ? view.result.points : 0);
 
   return (
     <main className="screen animation">
@@ -72,6 +90,10 @@ export function MatchAnimation({ match, onDone }: MatchAnimationProps) {
         ) : (
           <span className="live-tag pixel">Live</span>
         )}
+        {/* key: a new total re-mounts the number, which replays its pop. */}
+        <span className="anim-points pixel" key={points}>
+          {points} pts
+        </span>
         <span className="anim-clock pixel" aria-live="off">
           {frame.clock}
         </span>
@@ -108,16 +130,33 @@ export function MatchAnimation({ match, onDone }: MatchAnimationProps) {
 
       {/* The goal being shown right now. aria-live reads it out to screen readers. */}
       <div className="anim-goal-slot" aria-live="polite">
-        {current && currentTeam && (
-          <div className="anim-goal" key={frame.current!.eventIndex} style={colorVars(currentTeam.colors)}>
+        {current && currentTeam && currentCard && (
+          <div
+            className={`anim-goal${currentCard.badge ? ` ${currentCard.badge}` : ""}`}
+            key={frame.current!.eventIndex}
+            style={colorVars(currentTeam.colors)}
+          >
+            {currentCard.points > 0 && <span className="anim-goal-points">+{currentCard.points}</span>}
             <span className="anim-goal-title pixel">Goal!</span>
             <span className="anim-goal-team">{currentTeam.name}</span>
             <span className="anim-goal-scorer">
               {playerName(match, current.scorer)}
               {current.ownGoal && <span className="og-tag">OG</span>}
+              <Hit field={currentCard.scorer} />
             </span>
-            {current.assist && <span className="anim-goal-assist">Assist: {playerName(match, current.assist)}</span>}
-            <span className="anim-goal-minute pixel">{minuteLabel(current)}</span>
+            {current.assist && (
+              <span className="anim-goal-assist">
+                Assist: {playerName(match, current.assist)}
+                <Hit field={currentCard.assist} />
+              </span>
+            )}
+            <span className="anim-goal-minute">
+              <span className="pixel">{minuteLabel(current)}</span>
+              <Hit field={currentCard.minuteField} />
+            </span>
+            {currentCard.badge === "full-house" && <span className="badge-full-house pixel">★ Full house!</span>}
+            {currentCard.badge === "pair" && <span className="badge-pair pixel">◆ Pair</span>}
+            {!currentCard.guessed && <span className="anim-goal-missed">You didn't guess this goal</span>}
           </div>
         )}
       </div>
@@ -148,10 +187,12 @@ export function MatchAnimation({ match, onDone }: MatchAnimationProps) {
       <ol className="anim-feed">
         {shownGoals.map((g) => {
           const e = match.events[g.eventIndex]!;
+          const card = cards[g.eventIndex]!;
           return (
             <li key={g.eventIndex} className={`anim-feed-item ${g.side}`}>
               <span className="pixel">{minuteLabel(e)}</span> {playerName(match, e.scorer)}
               {e.ownGoal && <span className="og-tag">OG</span>}
+              {card.points > 0 && <span className="feed-points">+{card.points}</span>}
             </li>
           );
         })}

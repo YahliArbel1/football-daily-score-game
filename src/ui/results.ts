@@ -154,6 +154,19 @@ function goalCard(match: Match, event: GoalEvent, guess: GoalGuess | null, point
   };
 }
 
+/**
+ * The result card of every real goal, in the order of match.events (time
+ * order), so the match animation can show your hits as each goal happens.
+ * buildResults keeps each team's cards in that same order.
+ */
+export function cardsByEvent(match: Match, view: ResultsView): GoalCard[] {
+  const next: Record<Side, number> = { home: 0, away: 0 };
+  return match.events.map((event) => {
+    const team = view.teams.find((t) => t.side === event.team)!;
+    return team.cards[next[event.team]++]!;
+  });
+}
+
 export function buildResults(match: Match, guess: Guess): ResultsView {
   const breakdown = scoreGuess(match, guess);
 
