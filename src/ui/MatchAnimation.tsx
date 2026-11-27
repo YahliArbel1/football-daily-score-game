@@ -134,7 +134,8 @@ export function MatchAnimation({ match, onDone }: MatchAnimationProps) {
               aria-pressed={speed === s}
               onClick={() => setSpeed(s)}
             >
-              {s}×
+              {/* A plain "x": the pixel font draws "×" too small. */}
+              {s}x
             </button>
           ))}
         </div>
