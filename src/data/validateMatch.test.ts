@@ -154,6 +154,30 @@ describe("validateMatch", () => {
       );
     });
 
+    it("requires a bench of at least 5 players per team", () => {
+      // The mistake this catches: listing only the substitutes who came on.
+      const onlyUsedSubs = broken((m) => {
+        const bench = m.homeTeam.players.filter((p) => p.sub);
+        m.homeTeam.players = m.homeTeam.players.filter((p) => !p.sub || bench.indexOf(p) < 3);
+      });
+      expectProblem(onlyUsedSubs, "AC Milan has 3 bench players; it must have at least 5");
+    });
+
+    it("accepts a bench of exactly 5 players", () => {
+      const five = broken((m) => {
+        // Drop bench players who are not part of any goal until 5 are left.
+        const inGoals = new Set(m.events.flatMap((e) => [e.scorer, e.assist]));
+        let bench = m.awayTeam.players.filter((p) => p.sub).length;
+        m.awayTeam.players = m.awayTeam.players.filter((p) => {
+          if (!p.sub || inGoals.has(p.id) || bench <= 5) return true;
+          bench--;
+          return false;
+        });
+        expect(m.awayTeam.players.filter((p) => p.sub)).toHaveLength(5);
+      });
+      expect(validateMatch(five)).toEqual([]);
+    });
+
     it("rejects two players with the same shirt number in one team", () => {
       // The old mistake: Šmicer listed with Kewell's number 7.
       expectProblem(

@@ -5,6 +5,11 @@ const HEX_COLOR = /^#[0-9a-f]{6}$/i;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 /** Lowercase words joined by dashes, e.g. "ucl-final" or "mun". */
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+/**
+ * The smallest real bench: the 1986 World Cup named 5 substitutes. Fewer
+ * usually means only the players who came on were listed, not the full bench.
+ */
+export const MIN_BENCH = 5;
 
 /** true for a real calendar date written as YYYY-MM-DD (so not 2026-02-30). */
 function isRealDate(date: string): boolean {
@@ -100,6 +105,14 @@ export function validateMatch(
     const { name, players } = teams[side];
     const starters = players.filter((p) => !p.sub).length;
     if (starters !== 11) problems.push(`${name} has ${starters} starters; it must have 11`);
+
+    // Bench: every named substitute, used and unused (players pick from it).
+    const bench = players.length - starters;
+    if (bench < MIN_BENCH) {
+      problems.push(
+        `${name} has ${bench} bench players; it must have at least ${MIN_BENCH} (every named substitute, used and unused)`,
+      );
+    }
 
     const numbers = new Set<number>();
     for (const p of players) {
