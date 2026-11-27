@@ -1281,6 +1281,43 @@ button {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+  align-items: stretch;
+}
+
+/* 0.5x | 1x | 2x as one bar; the chosen speed is lit. */
+.speed-group {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  overflow: hidden;
+  background: var(--panel);
+  border: 3px solid var(--panel-edge);
+  border-radius: 12px;
+}
+
+/* The display font (like the score), not the pixel one: "1×" reads cleaner. */
+.speed-btn {
+  padding: 0 4px;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.speed-btn + .speed-btn {
+  border-left: 2px solid var(--panel-edge);
+}
+
+.speed-btn[aria-pressed="true"] {
+  color: var(--accent-ink);
+  background: var(--accent);
+}
+
+.speed-btn:focus-visible {
+  outline: 3px solid var(--text);
+  outline-offset: -3px;
 }
 
 .anim-btn {

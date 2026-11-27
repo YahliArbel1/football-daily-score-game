@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Match } from "../engine/types";
 import { minuteLabel, playerName } from "./results";
 import { colorVars, CompetitionBar } from "./shared";
-import { advance, buildTimeline, timelineAt } from "./timeline";
+import { advance, buildTimeline, SPEEDS, timelineAt, type Speed } from "./timeline";
 
 interface MatchAnimationProps {
   match: Match;
@@ -22,7 +22,7 @@ const MAX_FRAME_MS = 100;
 export function MatchAnimation({ match, onDone }: MatchAnimationProps) {
   const timeline = useMemo(() => buildTimeline(match), [match]);
   const [elapsed, setElapsed] = useState(0);
-  const [speed, setSpeed] = useState<1 | 2>(1);
+  const [speed, setSpeed] = useState<Speed>(1);
 
   // The frame loop reads these through refs, so it never has to restart.
   const speedRef = useRef(speed);
@@ -124,14 +124,20 @@ export function MatchAnimation({ match, onDone }: MatchAnimationProps) {
 
       {/* Above the goal list, so a long list never pushes them off the screen. */}
       <div className="anim-controls">
-        <button
-          type="button"
-          className="arcade-btn secondary anim-btn pixel"
-          aria-pressed={speed === 2}
-          onClick={() => setSpeed(speed === 1 ? 2 : 1)}
-        >
-          {speed === 1 ? "×2 speed" : "×1 speed"}
-        </button>
+        {/* Segmented control: every speed visible, one tap to choose, the current one lit. */}
+        <div className="speed-group" role="group" aria-label="Playback speed">
+          {SPEEDS.map((s) => (
+            <button
+              key={s}
+              type="button"
+              className="speed-btn"
+              aria-pressed={speed === s}
+              onClick={() => setSpeed(s)}
+            >
+              {s}×
+            </button>
+          ))}
+        </div>
         <button type="button" className="arcade-btn primary anim-btn pixel" onClick={onDone}>
           Skip &gt;&gt;
         </button>

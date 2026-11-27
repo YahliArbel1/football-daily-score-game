@@ -112,7 +112,11 @@ export function timelineAt(timeline: Timeline, elapsedMs: number): TimelineFrame
   };
 }
 
-/** The next elapsed time after `dtMs` of real time, at 1x or 2x speed. */
-export function advance(elapsedMs: number, dtMs: number, speed: 1 | 2): number {
+/** Playback speeds the player can choose. */
+export const SPEEDS = [0.5, 1, 2] as const;
+export type Speed = (typeof SPEEDS)[number];
+
+/** The next elapsed time after `dtMs` of real time, at the chosen speed. */
+export function advance(elapsedMs: number, dtMs: number, speed: Speed): number {
   return elapsedMs + dtMs * speed;
 }

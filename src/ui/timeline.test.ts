@@ -143,7 +143,8 @@ describe("timelineAt", () => {
 });
 
 describe("advance", () => {
-  it("moves twice as fast at 2x speed", () => {
+  it("moves at half, normal or double speed", () => {
+    expect(advance(1000, 16, 0.5)).toBe(1008);
     expect(advance(1000, 16, 1)).toBe(1016);
     expect(advance(1000, 16, 2)).toBe(1032);
   });
