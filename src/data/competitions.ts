@@ -13,6 +13,11 @@ export const competitions: Record<string, Competition> = {
     name: "UEFA Champions League",
     colors: { primary: "#0b1f5c", secondary: "#ffffff" },
   },
+  euro: {
+    id: "euro",
+    name: "UEFA European Championship",
+    colors: { primary: "#143cdb", secondary: "#ffffff" },
+  },
   wc: {
     id: "wc",
     name: "FIFA World Cup",
