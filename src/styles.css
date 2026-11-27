@@ -773,6 +773,25 @@ button {
 
 /* ---------- Results ---------- */
 
+/* "SCORDLE #1 · NOV 27" above the competition bar. */
+.daily-label {
+  margin: 0 0 10px;
+  color: var(--accent);
+  text-align: center;
+}
+
+/* "Next match in 05:12:33" under the total points. */
+.next-daily {
+  margin: -8px 0 18px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.next-daily-time {
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
 .full-time {
   display: inline-block;
   margin: 0 0 10px;

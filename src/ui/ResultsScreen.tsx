@@ -1,10 +1,15 @@
 import type { Match } from "../engine/types";
+import { NextDaily } from "./NextDaily";
 import type { FieldResult, GoalCard, ResultsView, TeamResults } from "./results";
 import { colorVars, CompetitionBar } from "./shared";
 
 interface ResultsScreenProps {
   match: Match;
   view: ResultsView;
+  /** Today's day number, for the countdown to the next match. */
+  day: number;
+  /** Today's Daily Game label, e.g. "#1 · NOV 27". */
+  label: string;
   onHome: () => void;
 }
 
@@ -113,11 +118,12 @@ function TeamHalf({ team }: { team: TeamResults }) {
   );
 }
 
-export function ResultsScreen({ match, view, onHome }: ResultsScreenProps) {
+export function ResultsScreen({ match, view, day, label, onHome }: ResultsScreenProps) {
   const { summary } = view;
 
   return (
     <main className="screen results">
+      <p className="daily-label pixel">Scordle {label}</p>
       <CompetitionBar match={match} />
 
       <p className="full-time pixel">Full time</p>
@@ -145,6 +151,8 @@ export function ResultsScreen({ match, view, onHome }: ResultsScreenProps) {
         <span className="total-number">{view.total}</span>
         <span className="total-label pixel">pts</span>
       </div>
+
+      <NextDaily day={day} />
 
       <ul className="summary">
         <li>
