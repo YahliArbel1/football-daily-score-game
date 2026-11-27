@@ -11,6 +11,8 @@ interface ResultsScreenProps {
   /** Today's Daily Game label, e.g. "#1 · NOV 27". */
   label: string;
   onHome: () => void;
+  /** Plays the match animation again from the start. */
+  onReplay: () => void;
 }
 
 /** ✓ +3 for a hit, ✗ for a miss, – when there was nothing to guess. */
@@ -35,7 +37,7 @@ function GoalResultCard({ card }: { card: GoalCard }) {
   ];
 
   return (
-    <li className={`result-card${card.guessed ? "" : " not-guessed"}${card.badge ? ` ${card.badge}` : ""}`}>
+    <li className={`result-card outcome-${card.outcome}${card.badge ? ` ${card.badge}` : ""}`}>
       <div className="result-card-header">
         <span className="pixel">
           {card.minute}
@@ -43,7 +45,10 @@ function GoalResultCard({ card }: { card: GoalCard }) {
         </span>
         {card.badge === "full-house" && <span className="badge-full-house pixel">★ Full house!</span>}
         {card.badge === "pair" && <span className="badge-pair pixel">◆ Pair</span>}
-        <span className="result-card-points">{card.guessed ? `+${card.points}` : "Not guessed"}</span>
+        {/* You knew of the goal but got it all wrong, or didn't know about it at all. */}
+        {card.outcome === "wrong" && <span className="badge-wrong pixel">✗ All wrong</span>}
+        {card.outcome === "missed" && <span className="badge-missed pixel">Missed goal</span>}
+        <span className="result-card-points">+{card.points}</span>
       </div>
 
       {card.guessed ? (
@@ -74,7 +79,7 @@ function GoalResultCard({ card }: { card: GoalCard }) {
           <strong>{card.scorer.real}</strong>
           {card.assist.real && <> · assist {card.assist.real}</>}
           <br />
-          You didn't guess this goal.
+          You didn't know about this goal.
         </p>
       )}
     </li>
@@ -118,7 +123,7 @@ function TeamHalf({ team }: { team: TeamResults }) {
   );
 }
 
-export function ResultsScreen({ match, view, day, label, onHome }: ResultsScreenProps) {
+export function ResultsScreen({ match, view, day, label, onHome, onReplay }: ResultsScreenProps) {
   const { summary } = view;
 
   return (
@@ -151,6 +156,11 @@ export function ResultsScreen({ match, view, day, label, onHome }: ResultsScreen
         <span className="total-number">{view.total}</span>
         <span className="total-label pixel">pts</span>
       </div>
+
+      <button type="button" className="arcade-btn secondary replay-btn" onClick={onReplay}>
+        <span className="mode-title">Watch again</span>
+        <span className="mode-text">Replay the match from kick-off</span>
+      </button>
 
       <NextDaily day={day} />
 

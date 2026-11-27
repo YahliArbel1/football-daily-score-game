@@ -455,6 +455,14 @@ button {
   color: var(--accent);
 }
 
+/* "Watch again" on the results screen. */
+.replay-btn {
+  width: 100%;
+  margin: 8px 0 18px;
+  text-align: center;
+  justify-items: center;
+}
+
 .next-btn {
   width: 100%;
   margin-top: 24px;
@@ -975,20 +983,51 @@ button {
   border-bottom: 1px solid var(--panel-edge);
 }
 
-.result-card.not-guessed,
+/* A guess for a goal that didn't happen. */
 .result-card.missed {
   opacity: 0.7;
+  border-style: dashed;
 }
 
-.result-card.not-guessed .result-card-points {
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  font-weight: 700;
+/* Knew of the goal, got it all wrong: a red edge and red points. */
+.result-card.outcome-wrong {
+  border-color: rgba(255, 45, 95, 0.55);
+  border-left-color: var(--live);
+}
+
+.result-card.outcome-wrong .result-card-points {
+  color: #ff8fa8;
+}
+
+/* Didn't know about the goal: greyed out, so it reads as "not in your guess". */
+.result-card.outcome-missed {
+  background: rgba(8, 21, 15, 0.6);
+  border-color: rgba(159, 188, 173, 0.25);
+  border-left-color: var(--muted);
+  filter: grayscale(0.6);
+}
+
+.result-card.outcome-missed .result-card-points {
   color: var(--muted);
 }
 
-.result-card.missed {
-  border-style: dashed;
+/* Same size as the Full house badge (10px from .pixel: the pixel font stays
+   crisp at whole pixels) and no text shadow, which smudges it on light colors. */
+.badge-wrong,
+.badge-missed {
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-shadow: none;
+}
+
+.badge-wrong {
+  color: #fff;
+  background: var(--live);
+}
+
+.badge-missed {
+  color: var(--night);
+  background: var(--muted);
 }
 
 /* Full house: every guessable field right. Rare, so it shines. */
@@ -1130,6 +1169,289 @@ button {
   70% {
     transform: scale(1.08);
   }
+}
+
+/* ---------- Match animation (MatchAnimation.tsx) ---------- */
+
+.anim-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 14px 0 10px;
+}
+
+.anim-status .full-time {
+  margin: 0;
+}
+
+.live-tag {
+  padding: 4px 10px;
+  font-size: 0.7rem;
+  color: #fff;
+  background: var(--live);
+  border-radius: 4px;
+}
+
+/* The pixel font has no "●", so the blinking dot is drawn here. */
+.live-tag::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  background: #fff;
+  border-radius: 50%;
+  animation: blink 1s steps(2, start) infinite;
+}
+
+.anim-clock {
+  font-size: 1.4rem;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 12px rgba(212, 255, 58, 0.45);
+}
+
+/* The score number pops each time it changes (it is re-mounted by key). */
+.anim-board .board-score {
+  animation: pop 0.35s ease-out both;
+}
+
+.anim-track {
+  position: relative;
+  height: 12px;
+  margin: 18px 0 8px;
+  background: var(--panel);
+  border: 2px solid var(--panel-edge);
+  border-radius: 6px;
+}
+
+.anim-track-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 4px;
+}
+
+/* Half-time line. */
+.anim-track-half {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  background: var(--muted);
+}
+
+.anim-track-goal {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  /* A thin white ring: a thick secondary-color ring would hide the main color. */
+  background: var(--c-primary);
+  border: 2px solid #fff;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: pop 0.3s ease-out both;
+}
+
+/* Keeps its height when empty, so the page doesn't jump between goals. */
+.anim-goal-slot {
+  min-height: 150px;
+  /* Room above the card for its points sticker. */
+  margin: 30px 0 10px;
+}
+
+.anim-goal {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 14px 12px;
+  text-align: center;
+  color: var(--c-text);
+  background: var(--c-primary);
+  border: 3px solid var(--c-secondary);
+  border-radius: 12px;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.45);
+  animation: pop 0.3s ease-out both;
+}
+
+/* The goal card uses two fonts and three sizes:
+   small  - pixel: the title line and the badge
+   large  - Anton: the scorer and the points sticker
+   medium - Anton: the assist, the ✓ marks and the notes */
+.anim-goal-title {
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+
+/* Your hits on the goal card (SPEC 4): green ✓, points popping in. */
+.anim-goal {
+  position: relative;
+}
+
+/* Gold and silver frames, as on the results screen. */
+.anim-goal.full-house {
+  border-color: #ffcc33;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.45), 0 0 26px rgba(255, 204, 51, 0.6);
+}
+
+.anim-goal.pair {
+  border-color: #c9d3dc;
+}
+
+.hit-mark {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+  vertical-align: middle;
+  color: #062a14;
+  background: #3ddc84;
+  border-radius: 999px;
+  animation: pop 0.35s 0.25s ease-out both;
+}
+
+/* The goal's total points, in the corner of the card. */
+.anim-goal-points {
+  position: absolute;
+  /* High enough to stay off the title line. */
+  top: -30px;
+  right: -8px;
+  padding: 4px 10px;
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  color: #062a14;
+  background: #3ddc84;
+  border: 3px solid #050a07;
+  border-radius: 10px;
+  transform: rotate(6deg);
+  animation: pop 0.4s 0.5s ease-out both;
+}
+
+.anim-goal .badge-full-house,
+.anim-goal .badge-pair {
+  margin-top: 6px;
+  font-size: 0.75rem;
+}
+
+.anim-points {
+  font-size: 0.75rem;
+  color: #3ddc84;
+  animation: pop 0.3s ease-out both;
+}
+
+.feed-points {
+  margin-left: 8px;
+  font-weight: 700;
+  color: #3ddc84;
+}
+
+.anim-goal-scorer {
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  line-height: 1.15;
+}
+
+.anim-goal-detail,
+.anim-goal-note {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+}
+
+/* Under a goal you got nothing on: clearly marked, in two shades. */
+.anim-goal-note {
+  margin-top: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  animation: pop 0.35s 0.25s ease-out both;
+}
+
+/* You knew of the goal but got it all wrong. */
+.anim-goal-note.wrong {
+  color: #fff;
+  background: var(--live);
+  border: 2px solid #050a07;
+}
+
+/* You didn't know about the goal at all. */
+.anim-goal-note.missed {
+  color: #fff;
+  background: #050a07;
+  border: 2px solid var(--muted);
+}
+
+.anim-feed {
+  display: grid;
+  gap: 4px;
+  margin: 18px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.anim-feed-item {
+  padding: 4px 8px;
+  font-size: 0.95rem;
+  color: var(--muted);
+  animation: slide-in 0.3s ease-out both;
+}
+
+.anim-feed-item .pixel {
+  font-size: 0.65rem;
+}
+
+.anim-feed-item.away {
+  text-align: right;
+}
+
+.anim-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: stretch;
+}
+
+/* 0.5x | 1x | 2x as one bar; the chosen speed is lit. */
+.speed-group {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  overflow: hidden;
+  background: var(--panel);
+  border: 3px solid var(--panel-edge);
+  border-radius: 12px;
+}
+
+/* The pixel font and size of the Skip button next to it, so they match. */
+.speed-btn {
+  padding: 0 4px;
+  font-family: var(--font-pixel);
+  font-size: 0.75rem;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.speed-btn + .speed-btn {
+  border-left: 2px solid var(--panel-edge);
+}
+
+.speed-btn[aria-pressed="true"] {
+  color: var(--accent-ink);
+  background: var(--accent);
+}
+
+.speed-btn:focus-visible {
+  outline: 3px solid var(--text);
+  outline-offset: -3px;
+}
+
+.anim-btn {
+  justify-items: center;
+  font-size: 0.75rem;
+  text-align: center;
 }
 
 /* ---------- Motion ---------- */

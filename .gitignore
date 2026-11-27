@@ -1,6 +1,8 @@
 node_modules/
 dist/
 coverage/
+# Output of `npm run screenshots`
+screenshots/
 
 # Installed agent skills (reinstall from skills-lock.json)
 .agents/

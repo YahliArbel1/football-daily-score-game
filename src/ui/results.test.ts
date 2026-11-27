@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { istanbul2005, istanbul2005Guess } from "../engine/fixtures/istanbul-2005";
 import { OWN_GOAL, type Guess, type Match } from "../engine/types";
-import { buildResults, minuteLabel, playerName } from "./results";
+import { buildResults, cardsByEvent, minuteLabel, pairLeftovers, playerName } from "./results";
 
 describe("minuteLabel", () => {
   it("formats normal minutes and stoppage time", () => {
@@ -21,6 +21,58 @@ describe("playerName", () => {
     expect(playerName(istanbul2005, OWN_GOAL)).toBe("Own goal");
     expect(playerName(istanbul2005, null)).toBeNull();
     expect(playerName(istanbul2005, "nobody")).toBe("nobody");
+  });
+});
+
+describe("pairLeftovers", () => {
+  it("pairs a guess with the goal closest to its minute", () => {
+    // Goals at 56' and 60'; a guess at 60' takes the 60' goal (position 1).
+    expect(pairLeftovers([56, 60], [60])).toEqual([[0, 1]]);
+  });
+
+  it("gives a guess without a minute the earliest goal left", () => {
+    expect(pairLeftovers([10, 50, 80], [null, null])).toEqual([
+      [0, 0],
+      [1, 1],
+    ]);
+  });
+
+  it("takes the earlier goal on a tie", () => {
+    expect(pairLeftovers([40, 60], [50])).toEqual([[0, 0]]);
+  });
+
+  it("never gives two guesses the same goal", () => {
+    expect(pairLeftovers([30, 70], [70, 72])).toEqual([
+      [0, 1],
+      [1, 0],
+    ]);
+  });
+
+  it("leaves extra guesses or goals unpaired", () => {
+    expect(pairLeftovers([30], [10, 20])).toEqual([[0, 0]]);
+    expect(pairLeftovers([10, 20], [])).toEqual([]);
+  });
+});
+
+describe("cardsByEvent", () => {
+  const view = buildResults(istanbul2005, istanbul2005Guess);
+  const cards = cardsByEvent(istanbul2005, view);
+
+  it("gives one card per real goal, in time order across both teams", () => {
+    expect(cards).toHaveLength(istanbul2005.events.length);
+    expect(cards.map((c) => c.minute)).toEqual(istanbul2005.events.map((e) => minuteLabel(e)));
+  });
+
+  it("keeps each goal's hits: Crespo 44' is the full house", () => {
+    const crespo44 = cards[istanbul2005.events.findIndex((e) => e.minute === 44)]!;
+    expect(crespo44.scorer.real).toBe("Hernán Crespo");
+    expect(crespo44.badge).toBe("full-house");
+    expect(crespo44.points).toBeGreaterThan(0);
+  });
+
+  it("is the same card object the results screen shows", () => {
+    const [milan] = view.teams;
+    expect(cards[0]).toBe(milan.cards[0]);
   });
 });
 
@@ -49,6 +101,7 @@ describe("buildResults: the SPEC 6.3 example", () => {
     expect(milan.cards[2]).toEqual({
       minute: "44'",
       ownGoal: false,
+      outcome: "hit",
       guessed: true,
       points: 7,
       badge: "full-house",
@@ -65,9 +118,20 @@ describe("buildResults: the SPEC 6.3 example", () => {
     expect(card.minuteField).toEqual({ real: "39'", guess: null, points: 0, status: "miss" });
   });
 
-  it("marks real goals you didn't guess", () => {
-    expect(milan.cards[0]).toMatchObject({ guessed: false, points: 0 });
+  it("marks real goals you didn't know about as missed", () => {
+    // Milan: 2 goals guessed, both matched to Crespo, so nothing is left for Maldini.
+    expect(milan.cards[0]).toMatchObject({ outcome: "missed", guessed: false, points: 0 });
     expect(milan.cards[0]!.scorer).toEqual({ real: "Paolo Maldini", guess: null, points: 0, status: "miss" });
+    // Liverpool: Šmicer 56' is left without a guess.
+    expect(liverpool.cards[1]).toMatchObject({ outcome: "missed", guessed: false });
+  });
+
+  it("shows Baroš 60' on Alonso's 60' goal: you knew of a goal there, but got it wrong", () => {
+    const alonso = liverpool.cards[2]!;
+    expect(alonso).toMatchObject({ outcome: "wrong", guessed: true, points: 0, badge: null });
+    expect(alonso.scorer).toEqual({ real: "Xabi Alonso", guess: "Milan Baroš", points: 0, status: "miss" });
+    // The minute alone earns nothing without the right scorer (SPEC 5.2).
+    expect(alonso.minuteField).toEqual({ real: "60'", guess: "60'", points: 0, status: "miss" });
   });
 
   it("treats a missing real assist as nothing to guess", () => {
@@ -82,8 +146,8 @@ describe("buildResults: the SPEC 6.3 example", () => {
     expect(liverpool.cards.map((c) => c.badge)).toEqual(["full-house", null, null]);
   });
 
-  it("lists Baroš under Liverpool as the guess that didn't match", () => {
-    expect(liverpool.missed).toEqual([{ scorerName: "Milan Baroš", minute: "60'" }]);
+  it("has no guesses left over: Baroš is shown on Alonso's goal", () => {
+    expect(liverpool.missed).toEqual([]);
     expect(milan.missed).toEqual([]);
   });
 });
@@ -105,12 +169,28 @@ describe("buildResults: other cases", () => {
     expect(buildResults(match, guess({ home: 2, away: 0 })).resultLabel).toBe("Right outcome · AC Milan win");
   });
 
-  it("lists an empty scorer guess as unmatched with no name", () => {
+  it("shows an empty guess on the team's earliest goal left", () => {
     const view = buildResults(
       istanbul2005,
       guess({ home: 1, away: 0 }, [{ team: "home", scorer: null, assist: null, minute: null }]),
     );
-    expect(view.teams[0].missed).toEqual([{ scorerName: null, minute: null }]);
+    expect(view.teams[0].cards[0]).toMatchObject({ outcome: "wrong", guessed: true, points: 0 });
+    expect(view.teams[0].cards[0]!.scorer.guess).toBeNull();
+    expect(view.teams[0].missed).toEqual([]);
+  });
+
+  it("lists guesses beyond the real goals as goals that didn't happen", () => {
+    // Liverpool scored 3; you guessed 4, all wrong: 3 shown on goals, 1 left over.
+    const wrong = { team: "away" as const, scorer: "carragher", assist: null, minute: null };
+    const view = buildResults(istanbul2005, guess({ home: 0, away: 4 }, [wrong, wrong, wrong, wrong]));
+    expect(view.teams[1].cards.map((c) => c.outcome)).toEqual(["wrong", "wrong", "wrong"]);
+    expect(view.teams[1].missed).toEqual([{ scorerName: "Jamie Carragher", minute: null }]);
+  });
+
+  it("never changes the points: a wrong goal earns 0", () => {
+    const base = buildResults(istanbul2005, istanbul2005Guess);
+    expect(base.total).toBe(19);
+    expect(base.teams.flatMap((t) => t.cards).filter((c) => c.outcome !== "hit").every((c) => c.points === 0)).toBe(true);
   });
 
   it("counts a goal with no real assist as a full house on scorer + minute", () => {
