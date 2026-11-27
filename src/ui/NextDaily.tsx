@@ -4,7 +4,7 @@ import { formatCountdown } from "./dailyText";
 
 /**
  * "Next match in 05:12:33", ticking every second. If the page stays open past
- * midnight UTC, it says a new match is ready (a reload picks it up).
+ * the player's midnight, it says a new match is ready (a reload picks it up).
  */
 export function NextDaily({ day }: { day: number }) {
   const [now, setNow] = useState(() => new Date());

@@ -19,7 +19,7 @@ import { StadiumBackground } from "./ui/stadium/StadiumBackground";
 type Screen = "home" | "intro" | "guess-score" | "guess-goals" | "results";
 
 // Today's Daily Game, chosen once when the page loads (SPEC 2.1). If the page
-// stays open past midnight UTC, a reload picks up the next match.
+// stays open past midnight, a reload picks up the next match.
 const loadedAt = new Date();
 const day = getDayNumber(loadedAt);
 const match = getDailyMatch(matches, loadedAt);
