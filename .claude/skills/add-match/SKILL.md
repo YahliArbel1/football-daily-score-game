@@ -51,8 +51,21 @@ Collect, for both teams:
 Sources:
 - **Source 1: English Wikipedia's article on the match** (finals and famous
   matches have one), or the competition season article.
-- **Source 2: one independent site** with full line-ups, e.g. worldfootball.net,
-  11v11.com, UEFA.com / FIFA.com match centre, transfermarkt.
+- **Source 2: one independent site** with full line-ups. Try **ESPN first**:
+  web-search `<home> <away> <date> espn lineups`, then fetch
+  `https://www.espn.com/soccer/lineups/_/gameId/<id>`. It lists starters and
+  the full bench with numbers. Its names are abbreviated (`M. ter Stegen`),
+  so take full names from Wikipedia.
+
+Known dead ends, don't spend fetches on them: worldfootball.net (HTTP 402)
+and 11v11.com (HTTP 403) refuse automated fetches. UEFA's line-up PDFs
+download but can't be read on this machine (no PDF tool installed).
+
+**Wikipedia pages get cut off.** The away team's line-up is near the end of
+the match box and is often missing from the first fetch. If any starter or
+bench player is missing, fetch again and ask **only** for the missing
+team's line-up box, quoted from the page text. Never fill gaps from memory
+or from the fetch tool's own summary; it has been wrong before.
 
 Cross-check every fact in both. When they disagree, or only one source has it,
 mark it **uncertain** and note both versions. Assists are often missing for old
@@ -73,6 +86,10 @@ same comments style. Rules (all checked by `src/data/validateMatch.ts`):
   the sources you used and any uncertain facts.
 - **id**: `<date>-<competition>-<stage>-<home id>-<away id>`, lowercase with
   dashes, e.g. `2014-07-08-wc-sf-bra-ger`.
+- **Goal comments** (the one-line comment above a goal) use only what a
+  source says ("penalty", "free kick", "Neymar's cross"). Don't add details
+  you remember (a back-heel, a deflection, a scramble): if no source says it,
+  leave it out or leave the comment out.
 - **Home/away**: as listed first/second in the official line-ups.
 - **Team ids**: short lowercase codes (`liv`, `bar`, `ger`).
 - **Player ids**: lowercase ASCII, no accents (`kaka`, `solskjaer`); add a first
