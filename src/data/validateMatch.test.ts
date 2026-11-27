@@ -163,6 +163,84 @@ describe("validateMatch", () => {
     });
   });
 
+  describe("date and id", () => {
+    it("rejects a date that isn't written YYYY-MM-DD", () => {
+      // Changing the date also breaks the id (it starts with the date), so check with contains.
+      const problems = validateMatch(broken((m) => (m.date = "25/05/2005"))).join("\n");
+      expect(problems).toContain('date "25/05/2005" must be a real date written as YYYY-MM-DD');
+    });
+
+    it("rejects a date that doesn't exist", () => {
+      const m = broken((m) => {
+        m.date = "2005-02-30";
+        m.id = "2005-02-30-ucl-final-acm-liv";
+      });
+      expectProblem(m, 'date "2005-02-30" must be a real date');
+    });
+
+    it("accepts a real leap day", () => {
+      const m = broken((m) => {
+        m.date = "2004-02-29";
+        m.id = "2004-02-29-ucl-final-acm-liv";
+      });
+      expect(validateMatch(m)).toEqual([]);
+    });
+
+    it("rejects an id that doesn't start with the date", () => {
+      expectProblem(
+        broken((m) => (m.id = "2005-05-26-ucl-final-acm-liv")),
+        'must look like "2005-05-25-<competition-stage>-acm-liv"',
+      );
+    });
+
+    it("rejects an id that doesn't end with the two team ids", () => {
+      expectProblem(broken((m) => (m.id = "2005-05-25-ucl-final-liv-acm")), "must look like");
+      expectProblem(broken((m) => (m.id = "2005-05-25-acm-liv")), "must look like");
+    });
+
+    it("rejects an id with capitals or spaces", () => {
+      expectProblem(broken((m) => (m.id = "2005-05-25-UCL Final-acm-liv")), "must look like");
+    });
+  });
+
+  describe("teams and text", () => {
+    it("rejects the same team on both sides", () => {
+      const m = broken((m) => {
+        m.awayTeam.id = "acm";
+        m.id = "2005-05-25-ucl-final-acm-acm";
+      });
+      expectProblem(m, 'home and away team have the same id "acm"');
+    });
+
+    it("rejects an empty venue", () => {
+      expectProblem(broken((m) => (m.venue = "  ")), "venue must not be empty");
+    });
+  });
+
+  describe("player details", () => {
+    it("rejects a player id with accents or capitals", () => {
+      // Dhorasoo is in no goal, so only the id itself is reported.
+      const m = broken((m) => {
+        m.homeTeam.players.find((p) => p.id === "dhorasoo")!.id = "Dhorasoo";
+      });
+      expectProblem(m, 'player id "Dhorasoo" must be lowercase');
+    });
+
+    it("rejects an empty player name", () => {
+      expectProblem(
+        broken((m) => (m.homeTeam.players.find((p) => p.id === "kaka")!.name = "")),
+        'player "kaka" has an empty name',
+      );
+    });
+
+    it("rejects shirt numbers outside 1-99", () => {
+      expectProblem(
+        broken((m) => (m.homeTeam.players.find((p) => p.id === "kaka")!.number = 0)),
+        'player "kaka" has shirt number 0',
+      );
+    });
+  });
+
   describe("competition and colors", () => {
     it("rejects an unknown competitionId", () => {
       expectProblem(

@@ -4,7 +4,9 @@ coverage/
 
 # Installed agent skills (reinstall from skills-lock.json)
 .agents/
-.claude/skills/
+.claude/skills/*
+# ...except our own skills, which are part of the project.
+!.claude/skills/add-match/
 
 # Personal Claude Code settings
 .claude/settings.local.json

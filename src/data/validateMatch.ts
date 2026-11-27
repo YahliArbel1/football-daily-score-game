@@ -2,6 +2,17 @@ import { MAX_GOALS_PER_TEAM, type GoalEvent, type Match, type Side } from "../en
 import { competitions as defaultCompetitions, type Competition } from "./competitions";
 
 const HEX_COLOR = /^#[0-9a-f]{6}$/i;
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
+/** Lowercase words joined by dashes, e.g. "ucl-final" or "mun". */
+const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
+/** true for a real calendar date written as YYYY-MM-DD (so not 2026-02-30). */
+function isRealDate(date: string): boolean {
+  if (!DATE.test(date)) return false;
+  const parsed = new Date(`${date}T00:00:00Z`);
+  // An impossible date either fails to parse or rolls over to another day.
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().startsWith(date);
+}
 
 const other = (side: Side): Side => (side === "home" ? "away" : "home");
 
@@ -20,6 +31,42 @@ export function validateMatch(
 ): string[] {
   const problems: string[] = [];
   const teams = { home: match.homeTeam, away: match.awayTeam };
+
+  // Date: a real date, written YYYY-MM-DD.
+  if (!isRealDate(match.date)) {
+    problems.push(`date "${match.date}" must be a real date written as YYYY-MM-DD`);
+  }
+
+  // Id: "<date>-<words>-<home id>-<away id>", e.g. "2014-07-08-wc-sf-bra-ger".
+  // Putting the date and teams in the id makes it unique and readable.
+  const idStart = `${match.date}-`;
+  const idEnd = `-${match.homeTeam.id}-${match.awayTeam.id}`;
+  const middle = match.id.slice(idStart.length, match.id.length - idEnd.length);
+  if (
+    !match.id.startsWith(idStart) ||
+    !match.id.endsWith(idEnd) ||
+    match.id.length <= idStart.length + idEnd.length ||
+    !SLUG.test(middle)
+  ) {
+    problems.push(
+      `id "${match.id}" must look like "${match.date}-<competition-stage>-${match.homeTeam.id}-${match.awayTeam.id}" (lowercase, dashes)`,
+    );
+  }
+
+  // Teams: two different teams, each with a lowercase id.
+  for (const side of ["home", "away"] as const) {
+    if (!SLUG.test(teams[side].id)) {
+      problems.push(`${side} team id "${teams[side].id}" must be lowercase letters, digits and dashes`);
+    }
+  }
+  if (match.homeTeam.id === match.awayTeam.id) {
+    problems.push(`home and away team have the same id "${match.homeTeam.id}"`);
+  }
+
+  // Text shown to players must not be empty.
+  for (const key of ["competition", "venue"] as const) {
+    if (match[key].trim() === "") problems.push(`${key} must not be empty`);
+  }
 
   // Final score: whole numbers from 0 to MAX_GOALS_PER_TEAM.
   for (const side of ["home", "away"] as const) {
@@ -58,6 +105,15 @@ export function validateMatch(
     for (const p of players) {
       if (numbers.has(p.number)) problems.push(`${name} has two players with shirt number ${p.number}`);
       numbers.add(p.number);
+
+      // Ids are plain lowercase ("kaka", not "Kaká"); names are what players see.
+      if (!SLUG.test(p.id)) {
+        problems.push(`player id "${p.id}" must be lowercase letters, digits and dashes`);
+      }
+      if (p.name.trim() === "") problems.push(`player "${p.id}" has an empty name`);
+      if (!Number.isInteger(p.number) || p.number < 1 || p.number > 99) {
+        problems.push(`player "${p.id}" has shirt number ${p.number}; it must be from 1 to 99`);
+      }
     }
   }
 
