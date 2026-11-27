@@ -1,0 +1,154 @@
+// The short replay of the match after Submit (SPEC 4): a running clock, the
+// score updating on every goal, and a card for each goal as it happens.
+// All timing comes from timeline.ts; this file only draws it.
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { Match } from "../engine/types";
+import { minuteLabel, playerName } from "./results";
+import { colorVars, CompetitionBar } from "./shared";
+import { advance, buildTimeline, timelineAt } from "./timeline";
+
+interface MatchAnimationProps {
+  match: Match;
+  /** Called when the animation ends or is skipped. */
+  onDone: () => void;
+}
+
+/** How long "Full time" stays on screen before the results open. */
+const FULL_TIME_HOLD_MS = 1200;
+/** Longest step between two frames, so a tab left in the background doesn't jump ahead. */
+const MAX_FRAME_MS = 100;
+
+export function MatchAnimation({ match, onDone }: MatchAnimationProps) {
+  const timeline = useMemo(() => buildTimeline(match), [match]);
+  const [elapsed, setElapsed] = useState(0);
+  const [speed, setSpeed] = useState<1 | 2>(1);
+
+  // The frame loop reads these through refs, so it never has to restart.
+  const speedRef = useRef(speed);
+  speedRef.current = speed;
+  const onDoneRef = useRef(onDone);
+  onDoneRef.current = onDone;
+
+  // requestAnimationFrame calls `tick` before every screen refresh (about 60
+  // times a second) with the current time; we move the animation forward by
+  // the time since the last call.
+  useEffect(() => {
+    let raf = 0;
+    let last: number | null = null;
+    let current = 0;
+    const tick = (now: number) => {
+      if (last !== null) {
+        current = advance(current, Math.min(now - last, MAX_FRAME_MS), speedRef.current);
+        setElapsed(current);
+      }
+      last = now;
+      if (current < timeline.durationMs) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [timeline]);
+
+  const frame = timelineAt(timeline, elapsed);
+
+  // At full time, hold the final score for a moment, then open the results.
+  useEffect(() => {
+    if (!frame.finished) return;
+    const id = window.setTimeout(() => onDoneRef.current(), FULL_TIME_HOLD_MS / speedRef.current);
+    return () => window.clearTimeout(id);
+  }, [frame.finished]);
+
+  const shownGoals = timeline.goals.slice(0, frame.shown);
+  const current = frame.current ? match.events[frame.current.eventIndex] : null;
+  const currentTeam = current && (current.team === "home" ? match.homeTeam : match.awayTeam);
+
+  return (
+    <main className="screen animation">
+      <CompetitionBar match={match} />
+
+      <div className="anim-status">
+        {frame.finished ? (
+          <span className="full-time pixel">Full time</span>
+        ) : (
+          <span className="live-tag pixel">Live</span>
+        )}
+        <span className="anim-clock pixel" aria-live="off">
+          {frame.clock}
+        </span>
+      </div>
+
+      <div className="final-board anim-board">
+        <span className="board-team" style={colorVars(match.homeTeam.colors)}>
+          {match.homeTeam.name}
+        </span>
+        {/* key: a new score re-mounts the number, which replays its pop. */}
+        <span className="board-score" key={`${frame.score.home}-${frame.score.away}`}>
+          {frame.score.home}–{frame.score.away}
+        </span>
+        <span className="board-team" style={colorVars(match.awayTeam.colors)}>
+          {match.awayTeam.name}
+        </span>
+      </div>
+
+      {/* 0' to full time, with a mark for each goal so far in its team's colors. */}
+      <div className="anim-track" aria-hidden="true">
+        <div className="anim-track-fill" style={{ width: `${frame.progress * 100}%` }} />
+        <span className="anim-track-half" style={{ left: `${(45 + timeline.stoppage.first) / timeline.totalUnits * 100}%` }} />
+        {shownGoals.map((g) => (
+          <span
+            key={g.eventIndex}
+            className="anim-track-goal"
+            style={{
+              left: `${(g.unit / timeline.totalUnits) * 100}%`,
+              ...colorVars(g.side === "home" ? match.homeTeam.colors : match.awayTeam.colors),
+            }}
+          />
+        ))}
+      </div>
+
+      {/* The goal being shown right now. aria-live reads it out to screen readers. */}
+      <div className="anim-goal-slot" aria-live="polite">
+        {current && currentTeam && (
+          <div className="anim-goal" key={frame.current!.eventIndex} style={colorVars(currentTeam.colors)}>
+            <span className="anim-goal-title pixel">Goal!</span>
+            <span className="anim-goal-team">{currentTeam.name}</span>
+            <span className="anim-goal-scorer">
+              {playerName(match, current.scorer)}
+              {current.ownGoal && <span className="og-tag">OG</span>}
+            </span>
+            {current.assist && <span className="anim-goal-assist">Assist: {playerName(match, current.assist)}</span>}
+            <span className="anim-goal-minute pixel">{minuteLabel(current)}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Above the goal list, so a long list never pushes them off the screen. */}
+      <div className="anim-controls">
+        <button
+          type="button"
+          className="arcade-btn secondary anim-btn pixel"
+          aria-pressed={speed === 2}
+          onClick={() => setSpeed(speed === 1 ? 2 : 1)}
+        >
+          {speed === 1 ? "×2 speed" : "×1 speed"}
+        </button>
+        <button type="button" className="arcade-btn primary anim-btn pixel" onClick={onDone}>
+          Skip &gt;&gt;
+        </button>
+      </div>
+
+      {/* Every goal so far, newest last. */}
+      <ol className="anim-feed">
+        {shownGoals.map((g) => {
+          const e = match.events[g.eventIndex]!;
+          return (
+            <li key={g.eventIndex} className={`anim-feed-item ${g.side}`}>
+              <span className="pixel">{minuteLabel(e)}</span> {playerName(match, e.scorer)}
+              {e.ownGoal && <span className="og-tag">OG</span>}
+            </li>
+          );
+        })}
+      </ol>
+    </main>
+  );
+}

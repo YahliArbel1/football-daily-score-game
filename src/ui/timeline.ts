@@ -1,5 +1,5 @@
 // The timing of the match animation after Submit (SPEC 4): a clock runs from
-// 0' to full time, and stops briefly on each goal so the player can read it.
+// 0' to full time in 8 s, and stops on each goal so the player can read it.
 // Pure functions only; MatchAnimation.tsx draws whatever `timelineAt` returns.
 //
 // Time is measured in "match units": one unit per minute, with stoppage time
@@ -9,11 +9,11 @@
 import type { Match, Score, Side } from "../engine/types";
 
 /** How long the clock takes to run from 0' to full time, without pauses. */
-export const RUN_MS = 5000;
-/** The longest pause on one goal. */
-export const MAX_GOAL_PAUSE_MS = 1200;
-/** All goal pauses together never take longer than this, so even 7 goals fit. */
-export const PAUSE_BUDGET_MS = 4500;
+export const RUN_MS = 8000;
+/** The longest pause on one goal: long enough to read the goal card. */
+export const MAX_GOAL_PAUSE_MS = 2500;
+/** All goal pauses together never take longer than this, so even 7 goals stay under 20 s. */
+export const PAUSE_BUDGET_MS = 10000;
 
 export interface TimelineGoal {
   /** Index into match.events. */

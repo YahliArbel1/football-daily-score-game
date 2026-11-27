@@ -6,6 +6,7 @@ import { dailyLabel } from "./ui/dailyText";
 import { resizeGoalGuesses } from "./ui/goalGuesses";
 import { GoalsScreen } from "./ui/GoalsScreen";
 import { HomePage } from "./ui/HomePage";
+import { MatchAnimation } from "./ui/MatchAnimation";
 import { MatchIntro } from "./ui/MatchIntro";
 import { buildResults, type ResultsView } from "./ui/results";
 import { ResultsScreen } from "./ui/ResultsScreen";
@@ -16,7 +17,7 @@ import type { CrowdPalette } from "./ui/stadium/crowd";
 import { PitchBackground } from "./ui/stadium/PitchBackground";
 import { StadiumBackground } from "./ui/stadium/StadiumBackground";
 
-type Screen = "home" | "intro" | "guess-score" | "guess-goals" | "results";
+type Screen = "home" | "intro" | "guess-score" | "guess-goals" | "animation" | "results";
 
 // Today's Daily Game, chosen once when the page loads (SPEC 2.1). If the page
 // stays open past midnight, a reload picks up the next match.
@@ -59,7 +60,8 @@ export function App() {
     // If the browser blocks saving, the game still works; only a reload forgets the guess.
     saveGuess(browserStorage(), day, guess);
     setResults(buildResults(match, guess));
-    setScreen("results");
+    // The match replay first, then the results (SPEC 4).
+    setScreen("animation");
   };
 
   // Home page: mixed crowd. Match screens: each half of the stand in one team's colors.
@@ -75,7 +77,9 @@ export function App() {
   const boards = useMemo<BoardPanel[]>(() => (isHome ? homeBoards() : matchBoards(match)), [isHome]);
 
   let content;
-  if (screen === "results" && results) {
+  if (screen === "animation") {
+    content = <MatchAnimation match={match} onDone={() => setScreen("results")} />;
+  } else if (screen === "results" && results) {
     content = (
       <ResultsScreen
         match={match}
