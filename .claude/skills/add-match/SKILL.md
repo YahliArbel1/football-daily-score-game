@@ -45,7 +45,12 @@ Before researching in depth:
 Collect, for both teams:
 - date, venue (stadium, city), competition and stage;
 - **starting XI and every substitute on the bench** (used and unused), with
-  shirt numbers. Not only the players who came on;
+  shirt numbers. Not only the players who came on. The bench means the
+  **named substitutes for that match**, not the whole tournament squad: if a
+  source lists a bench bigger than usual, confirm it in a second source
+  before using it. Benches have at least 5 players (`validateMatch` checks);
+  if you can't find the unused ones, stop and tell the user rather than
+  listing only the players who came on;
 - every goal: scorer, minute (stoppage time as `45+2` / `90+3`), assist, own goal.
 
 Sources:
@@ -57,9 +62,36 @@ Sources:
   the full bench with numbers. Its names are abbreviated (`M. ter Stegen`),
   so take full names from Wikipedia.
 
-Known dead ends, don't spend fetches on them: worldfootball.net (HTTP 402)
-and 11v11.com (HTTP 403) refuse automated fetches. UEFA's line-up PDFs
+Other sources that worked:
+- **FotMob** (`https://www.fotmob.com/match/<id>`, find the id by web search):
+  full line-ups, bench, and assists, for recent matches.
+- **thesoccerworldcups.com** (`/games/<year>_<team1>_<team2>.php`): World Cup
+  line-ups with numbers. It lists the whole squad as reserves, so it can't
+  tell you the bench.
+- **UEFA.com match reports** (the history articles, not the match-centre
+  pages): a "Line-ups" section with the unused substitutes, but no numbers.
+  UEFA is the official organiser, so for UEFA competitions (Champions
+  League, Euros) it is **one of the most reliable sources**: when it's
+  available, check the line-ups and bench against it, and when it disagrees
+  with another site, prefer UEFA (and still list the disagreement as
+  uncertain).
+
+When Wikipedia has **no line-ups** for the match (no article of its own, and
+the season article gives only scorers), use two of the sources above instead
+and say so in the file comment.
+
+**ESPN is unreliable for old matches** (before about 2000): its 1986 World
+Cup page had the wrong venue, the wrong referee and a different minute. Use
+it only to confirm, and prefer thesoccerworldcups.com for World Cups.
+
+Known dead ends, don't spend fetches on them: worldfootball.net (HTTP 402),
+11v11.com and fbref.com (HTTP 403) refuse automated fetches. UEFA's
+match-centre line-up pages are empty when fetched, and its line-up PDFs
 download but can't be read on this machine (no PDF tool installed).
+
+**Ask the fetch tool for "only what is literally in the page text, not a
+model summary"**, in every fetch. Its own summaries got line-ups wrong
+several times; with this wording the reports were correct.
 
 **Wikipedia pages get cut off.** The away team's line-up is near the end of
 the match box and is often missing from the first fetch. If any starter or
@@ -95,6 +127,14 @@ same comments style. Rules (all checked by `src/data/validateMatch.ts`):
 - **Player ids**: lowercase ASCII, no accents (`kaka`, `solskjaer`); add a first
   initial when needed (`g-neville`, `p-neville`). Ids are unique across both
   teams. `name` keeps the real spelling with accents.
+- **Player names** come from a source where possible. When the sources give
+  only a surname or initial (`S. Mignolet`), you may write the player's usual
+  full name (`Simon Mignolet`) **only if you are sure of it**, and list those
+  names as uncertain in the file comment and the report. If you aren't sure,
+  write the name as printed.
+- **File comments** follow the same rule as goal comments: only facts a
+  source states. No background you remember (a suspension, a rule of the
+  tournament).
 - **Starters**: exactly 11 per team, no `sub` field. Bench players have `sub: true`.
 - **Goals** (`events`): in time order. `minute` 1–90; stoppage time only as
   `minute: 45` or `90` with `extra: N`. `team` is the side the goal **counts
