@@ -983,20 +983,51 @@ button {
   border-bottom: 1px solid var(--panel-edge);
 }
 
-.result-card.not-guessed,
+/* A guess for a goal that didn't happen. */
 .result-card.missed {
   opacity: 0.7;
+  border-style: dashed;
 }
 
-.result-card.not-guessed .result-card-points {
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  font-weight: 700;
+/* Knew of the goal, got it all wrong: a red edge and red points. */
+.result-card.outcome-wrong {
+  border-color: rgba(255, 45, 95, 0.55);
+  border-left-color: var(--live);
+}
+
+.result-card.outcome-wrong .result-card-points {
+  color: #ff8fa8;
+}
+
+/* Didn't know about the goal: greyed out, so it reads as "not in your guess". */
+.result-card.outcome-missed {
+  background: rgba(8, 21, 15, 0.6);
+  border-color: rgba(159, 188, 173, 0.25);
+  border-left-color: var(--muted);
+  filter: grayscale(0.6);
+}
+
+.result-card.outcome-missed .result-card-points {
   color: var(--muted);
 }
 
-.result-card.missed {
-  border-style: dashed;
+/* Same size as the Full house badge (10px from .pixel: the pixel font stays
+   crisp at whole pixels) and no text shadow, which smudges it on light colors. */
+.badge-wrong,
+.badge-missed {
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-shadow: none;
+}
+
+.badge-wrong {
+  color: #fff;
+  background: var(--live);
+}
+
+.badge-missed {
+  color: var(--night);
+  background: var(--muted);
 }
 
 /* Full house: every guessable field right. Rare, so it shines. */
@@ -1225,7 +1256,8 @@ button {
 /* Keeps its height when empty, so the page doesn't jump between goals. */
 .anim-goal-slot {
   min-height: 150px;
-  margin: 18px 0 10px;
+  /* Room above the card for its points sticker. */
+  margin: 30px 0 10px;
 }
 
 .anim-goal {
@@ -1242,8 +1274,13 @@ button {
   animation: pop 0.3s ease-out both;
 }
 
+/* The goal card uses two fonts and three sizes:
+   small  - pixel: the title line and the badge
+   large  - Anton: the scorer and the points sticker
+   medium - Anton: the assist, the ✓ marks and the notes */
 .anim-goal-title {
-  font-size: 1.1rem;
+  font-size: 0.75rem;
+  line-height: 1.6;
 }
 
 /* Your hits on the goal card (SPEC 4): green ✓, points popping in. */
@@ -1264,10 +1301,10 @@ button {
 .hit-mark {
   display: inline-block;
   margin-left: 8px;
-  padding: 2px 8px;
-  font-family: var(--font-body);
-  font-size: 0.9rem;
-  font-weight: 700;
+  padding: 1px 8px;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
   line-height: 1.3;
   vertical-align: middle;
   color: #062a14;
@@ -1279,11 +1316,12 @@ button {
 /* The goal's total points, in the corner of the card. */
 .anim-goal-points {
   position: absolute;
-  top: -14px;
+  /* High enough to stay off the title line. */
+  top: -30px;
   right: -8px;
-  padding: 6px 10px;
+  padding: 4px 10px;
   font-family: var(--font-display);
-  font-size: 1.4rem;
+  font-size: 1.9rem;
   color: #062a14;
   background: #3ddc84;
   border: 3px solid #050a07;
@@ -1294,14 +1332,8 @@ button {
 
 .anim-goal .badge-full-house,
 .anim-goal .badge-pair {
-  margin-top: 4px;
-  font-size: 0.65rem;
-}
-
-.anim-goal-missed {
-  margin-top: 4px;
-  font-size: 0.85rem;
-  opacity: 0.75;
+  margin-top: 6px;
+  font-size: 0.75rem;
 }
 
 .anim-points {
@@ -1316,20 +1348,39 @@ button {
   color: #3ddc84;
 }
 
-.anim-goal-team {
-  font-family: var(--font-display);
-  text-transform: uppercase;
-  opacity: 0.85;
-}
-
 .anim-goal-scorer {
   font-family: var(--font-display);
-  font-size: clamp(1.4rem, 6vw, 2rem);
-  line-height: 1.1;
+  font-size: 1.9rem;
+  line-height: 1.15;
 }
 
-.anim-goal-minute {
-  font-size: 0.8rem;
+.anim-goal-detail,
+.anim-goal-note {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+}
+
+/* Under a goal you got nothing on: clearly marked, in two shades. */
+.anim-goal-note {
+  margin-top: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  animation: pop 0.35s 0.25s ease-out both;
+}
+
+/* You knew of the goal but got it all wrong. */
+.anim-goal-note.wrong {
+  color: #fff;
+  background: var(--live);
+  border: 2px solid #050a07;
+}
+
+/* You didn't know about the goal at all. */
+.anim-goal-note.missed {
+  color: #fff;
+  background: #050a07;
+  border: 2px solid var(--muted);
 }
 
 .anim-feed {

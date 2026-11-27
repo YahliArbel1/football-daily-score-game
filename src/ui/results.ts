@@ -3,6 +3,7 @@
 // the guess that was matched to them (field by field), plus the guesses
 // that didn't match any real goal.
 
+import { eventMinute, parseMinute } from "../engine/minute";
 import { outcomeOf, type ResultScore } from "../engine/result";
 import { scoreGuess } from "../engine/scoring";
 import {
@@ -40,11 +41,21 @@ export function goalBadge(scorer: FieldResult, assist: FieldResult, minute: Fiel
   return hits >= 2 ? "pair" : null;
 }
 
+/**
+ * How a real goal compares with your guess (display only; scoring is unchanged):
+ * hit    - a guess was matched to it and earned points.
+ * wrong  - you knew of the goal (you guessed one for this team that matched
+ *          no goal), but got everything wrong. That guess is shown here.
+ * missed - you didn't know about it: no guess left for it.
+ */
+export type GoalOutcome = "hit" | "wrong" | "missed";
+
 export interface GoalCard {
   /** e.g. "44'" or "45+2'" */
   minute: string;
   ownGoal: boolean;
-  /** False when none of your guesses was matched to this goal. */
+  outcome: GoalOutcome;
+  /** True when a guess is shown next to this goal (outcome hit or wrong). */
   guessed: boolean;
   /** Points earned on this goal (0 when not guessed). */
   points: number;
@@ -133,7 +144,38 @@ function field(real: string | null, guess: string | null, points: number): Field
   return { real, guess, points, status };
 }
 
-function goalCard(match: Match, event: GoalEvent, guess: GoalGuess | null, points: { scorer: number; assist: number; minute: number } | null): GoalCard {
+/**
+ * Pairs one team's leftover guesses (matched to no goal) with its leftover
+ * goals (no guess matched), for display only. A guess with a minute takes the
+ * goal closest to it; a guess without one takes the earliest goal left.
+ * Takes minutes as totals (45+2 -> 47; null for no minute) and returns
+ * [guess position, goal position] pairs. Extra guesses or goals stay unpaired.
+ */
+export function pairLeftovers(goalMinutes: number[], guessMinutes: (number | null)[]): [number, number][] {
+  const free = goalMinutes.map((_, i) => i); // goal positions, in time order
+  const pairs: [number, number][] = [];
+  guessMinutes.forEach((minute, guessPos) => {
+    if (free.length === 0) return;
+    let pick = 0; // the earliest goal left
+    if (minute !== null) {
+      // The closest goal; on a tie, the earlier one.
+      free.forEach((goalPos, k) => {
+        if (Math.abs(goalMinutes[goalPos]! - minute) < Math.abs(goalMinutes[free[pick]!]! - minute)) pick = k;
+      });
+    }
+    pairs.push([guessPos, free[pick]!]);
+    free.splice(pick, 1);
+  });
+  return pairs;
+}
+
+function goalCard(
+  match: Match,
+  event: GoalEvent,
+  guess: GoalGuess | null,
+  points: { scorer: number; assist: number; minute: number } | null,
+  outcome: GoalOutcome,
+): GoalCard {
   const realScorer = playerName(match, event.scorer) ?? event.scorer;
   const realAssist = playerName(match, event.assist);
   const realMinute = minuteLabel(event);
@@ -145,6 +187,7 @@ function goalCard(match: Match, event: GoalEvent, guess: GoalGuess | null, point
   return {
     minute: realMinute,
     ownGoal: event.ownGoal,
+    outcome,
     guessed: guess !== null,
     points: p.scorer + p.assist + p.minute,
     badge: goalBadge(scorer, assist, minuteField),
@@ -186,17 +229,42 @@ export function buildResults(match: Match, guess: Guess): ResultsView {
   const teamResults = (side: Side): TeamResults => {
     const team = side === "home" ? match.homeTeam : match.awayTeam;
 
+    // Leftovers: this team's goals no guess was matched to, and its guesses
+    // that matched no goal. Pairing them tells "knew of it, got it wrong"
+    // apart from "didn't know about it".
+    const leftoverGoals = match.events
+      .map((event, eventIndex) => ({ event, eventIndex }))
+      .filter(({ event, eventIndex }) => event.team === side && !matchedTo.has(eventIndex));
+    const leftoverGuesses = guess.goals
+      .map((g, guessIndex) => ({ g, guessIndex }))
+      .filter(({ g, guessIndex }) => g.team === side && breakdown.goals[guessIndex]?.eventIndex === null);
+    const shownGuess = new Map<number, number>(); // event index -> leftover guess index
+    for (const [guessPos, goalPos] of pairLeftovers(
+      leftoverGoals.map(({ event }) => eventMinute(event).total),
+      leftoverGuesses.map(({ g }) => parseMinute(g.minute)?.total ?? null),
+    )) {
+      shownGuess.set(leftoverGoals[goalPos]!.eventIndex, leftoverGuesses[guessPos]!.guessIndex);
+    }
+
     const cards = match.events.flatMap((event, eventIndex) => {
       if (event.team !== side) return [];
       const guessIndex = matchedTo.get(eventIndex);
-      const matchedGuess = guessIndex === undefined ? null : guess.goals[guessIndex] ?? null;
-      const points = guessIndex === undefined ? null : breakdown.goals[guessIndex]?.points ?? null;
-      return [goalCard(match, event, matchedGuess, points)];
+      if (guessIndex !== undefined) {
+        const points = breakdown.goals[guessIndex]?.points ?? null;
+        return [goalCard(match, event, guess.goals[guessIndex] ?? null, points, "hit")];
+      }
+      const wrongIndex = shownGuess.get(eventIndex);
+      if (wrongIndex !== undefined) {
+        return [goalCard(match, event, guess.goals[wrongIndex] ?? null, null, "wrong")];
+      }
+      return [goalCard(match, event, null, null, "missed")];
     });
 
-    const missed = guess.goals
-      .filter((g, i) => g.team === side && breakdown.goals[i]?.eventIndex === null)
-      .map((g) => ({ scorerName: playerName(match, g.scorer), minute: guessedMinuteLabel(g.minute) }));
+    // Guesses left over after pairing: goals that didn't happen.
+    const paired = new Set(shownGuess.values());
+    const missed = leftoverGuesses
+      .filter(({ guessIndex }) => !paired.has(guessIndex))
+      .map(({ g }) => ({ scorerName: playerName(match, g.scorer), minute: guessedMinuteLabel(g.minute) }));
 
     return {
       side,

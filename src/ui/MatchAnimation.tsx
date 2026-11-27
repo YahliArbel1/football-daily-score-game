@@ -136,27 +136,41 @@ export function MatchAnimation({ match, view, onDone }: MatchAnimationProps) {
             key={frame.current!.eventIndex}
             style={colorVars(currentTeam.colors)}
           >
+            {/* Two fonts, three sizes: pixel for the title line and badge,
+                Anton for the scorer (large) and the details (medium). */}
             {currentCard.points > 0 && <span className="anim-goal-points">+{currentCard.points}</span>}
-            <span className="anim-goal-title pixel">Goal!</span>
-            <span className="anim-goal-team">{currentTeam.name}</span>
+            <span className="anim-goal-title pixel">
+              {currentTeam.name} · Goal! · {minuteLabel(current)}
+            </span>
             <span className="anim-goal-scorer">
               {playerName(match, current.scorer)}
               {current.ownGoal && <span className="og-tag">OG</span>}
               <Hit field={currentCard.scorer} />
             </span>
             {current.assist && (
-              <span className="anim-goal-assist">
+              <span className="anim-goal-detail">
                 Assist: {playerName(match, current.assist)}
                 <Hit field={currentCard.assist} />
               </span>
             )}
-            <span className="anim-goal-minute">
-              <span className="pixel">{minuteLabel(current)}</span>
-              <Hit field={currentCard.minuteField} />
-            </span>
+            {/* The minute is already in the title; this line only shows that you got it. */}
+            {currentCard.minuteField.status === "hit" && (
+              <span className="anim-goal-detail">
+                Minute
+                <Hit field={currentCard.minuteField} />
+              </span>
+            )}
             {currentCard.badge === "full-house" && <span className="badge-full-house pixel">★ Full house!</span>}
             {currentCard.badge === "pair" && <span className="badge-pair pixel">◆ Pair</span>}
-            {!currentCard.guessed && <span className="anim-goal-missed">You didn't guess this goal</span>}
+            {currentCard.outcome === "wrong" && (
+              <span className="anim-goal-note wrong">
+                ✗ Your guess: {currentCard.scorer.guess ?? "no scorer"}
+                {currentCard.minuteField.guess && ` ${currentCard.minuteField.guess}`}
+              </span>
+            )}
+            {currentCard.outcome === "missed" && (
+              <span className="anim-goal-note missed">✗ You missed this goal</span>
+            )}
           </div>
         )}
       </div>

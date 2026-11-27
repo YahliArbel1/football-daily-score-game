@@ -135,6 +135,14 @@ try {
 
   console.log("Results:");
   await shot("results", true);
+  // Close-ups of one card header per kind of goal, to check small text.
+  for (const kind of ["full-house", "pair", "outcome-wrong", "outcome-missed"]) {
+    const header = page.locator(`.result-card.${kind} .result-card-header`).first();
+    if (await header.count()) {
+      await header.screenshot({ path: `${OUT}/badge-${kind}.png` });
+      console.log(`  ${OUT}/badge-${kind}.png`);
+    }
+  }
 
   // "Watch again" must start the animation over from kick-off.
   await page.getByRole("button", { name: /Watch again/ }).click();

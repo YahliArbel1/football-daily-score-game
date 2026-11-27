@@ -37,7 +37,7 @@ function GoalResultCard({ card }: { card: GoalCard }) {
   ];
 
   return (
-    <li className={`result-card${card.guessed ? "" : " not-guessed"}${card.badge ? ` ${card.badge}` : ""}`}>
+    <li className={`result-card outcome-${card.outcome}${card.badge ? ` ${card.badge}` : ""}`}>
       <div className="result-card-header">
         <span className="pixel">
           {card.minute}
@@ -45,7 +45,10 @@ function GoalResultCard({ card }: { card: GoalCard }) {
         </span>
         {card.badge === "full-house" && <span className="badge-full-house pixel">★ Full house!</span>}
         {card.badge === "pair" && <span className="badge-pair pixel">◆ Pair</span>}
-        <span className="result-card-points">{card.guessed ? `+${card.points}` : "Not guessed"}</span>
+        {/* You knew of the goal but got it all wrong, or didn't know about it at all. */}
+        {card.outcome === "wrong" && <span className="badge-wrong pixel">✗ All wrong</span>}
+        {card.outcome === "missed" && <span className="badge-missed pixel">Missed goal</span>}
+        <span className="result-card-points">+{card.points}</span>
       </div>
 
       {card.guessed ? (
@@ -76,7 +79,7 @@ function GoalResultCard({ card }: { card: GoalCard }) {
           <strong>{card.scorer.real}</strong>
           {card.assist.real && <> · assist {card.assist.real}</>}
           <br />
-          You didn't guess this goal.
+          You didn't know about this goal.
         </p>
       )}
     </li>
