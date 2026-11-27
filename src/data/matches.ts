@@ -1,4 +1,5 @@
 import { barcelona1999 } from "../engine/fixtures/barcelona-1999";
+import { barcelona2017 } from "../engine/fixtures/barcelona-2017";
 import { beloHorizonte2014 } from "../engine/fixtures/belo-horizonte-2014";
 import { istanbul2005 } from "../engine/fixtures/istanbul-2005";
 import type { Match } from "../engine/types";
@@ -11,4 +12,4 @@ import type { Match } from "../engine/types";
  * (src/engine/daily.ts). Add new daily matches ONLY AT THE END: inserting one
  * earlier would change which match every later day gets.
  */
-export const matches: Match[] = [istanbul2005, barcelona1999, beloHorizonte2014];
+export const matches: Match[] = [istanbul2005, barcelona1999, beloHorizonte2014, barcelona2017];
