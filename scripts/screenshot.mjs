@@ -9,6 +9,8 @@
 // Options:
 //   --day N      which Daily Game to play (0 = the first, see src/engine/daily.ts)
 //   --every MS   time between animation screenshots (default 1000)
+//   --from MS    start taking animation screenshots at this time (default 0)
+//   --until MS   stop taking animation screenshots after this time (default 60000)
 //   --desktop    a 1280x800 window instead of a phone (390x844)
 //   --show       open a visible browser window instead of a hidden one
 //
@@ -25,6 +27,8 @@ const { values } = parseArgs({
   options: {
     day: { type: "string" },
     every: { type: "string", default: "1000" },
+    until: { type: "string", default: "60000" },
+    from: { type: "string", default: "0" },
     desktop: { type: "boolean", default: false },
     show: { type: "boolean", default: false },
   },
@@ -144,11 +148,16 @@ try {
   await page.getByRole("button", { name: /Submit guess/ }).click();
 
   console.log("Animation:");
-  for (let ms = 0; ms <= 60_000; ms += every) {
-    if (ms > 0) await page.clock.runFor(every);
+  // --from: jump ahead without screenshots first.
+  const from = Number(values.from);
+  if (from > 0) await page.clock.runFor(from);
+  for (let ms = from; ms <= Number(values.until); ms += every) {
+    if (ms > from) await page.clock.runFor(every);
     if (await page.locator(".screen.results").count()) break;
     await shot(`anim-${String(ms).padStart(5, "0")}ms`);
   }
+  // Stopped early (--until): play the rest so the results screen opens.
+  if (!(await page.locator(".screen.results").count())) await page.clock.runFor(60_000);
 
   console.log(`Sounds started during the animation: ${await page.evaluate(() => window.__sounds)}`);
 

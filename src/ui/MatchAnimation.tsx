@@ -7,7 +7,9 @@ import type { Match } from "../engine/types";
 import { cardsByEvent, minuteLabel, playerName, type FieldResult, type ResultsView } from "./results";
 import { browserStorage } from "./savedGuess";
 import { colorVars, CompetitionBar, PixelIcon } from "./shared";
-import { cuesBetween, loadMuted, saveMuted } from "./sound";
+import { GoalScene } from "./GoalScene";
+import { ballLandsAt, SCENE_MS, shotTarget } from "./sceneFrames";
+import { cuesBetween, goalCues, loadMuted, pointsCues, saveMuted } from "./sound";
 import { playCue, stopAll } from "./synth";
 import { advance, buildTimeline, SPEEDS, timelineAt, type Speed, type TimelineFrame } from "./timeline";
 
@@ -71,16 +73,36 @@ export function MatchAnimation({ match, view, onDone }: MatchAnimationProps) {
 
   const frame = timelineAt(timeline, elapsed);
 
-  // Sounds: compare with the last frame that played sounds, and play what's
-  // new (kick-off, a goal, a hit, full time). Only runs when a goal appears or
-  // the match ends, not on every tick.
+  // Whistles: kick-off on the first frame, the final whistle at full time.
+  // Only runs when the match ends, not on every tick.
   const lastSoundFrame = useRef<TimelineFrame | null>(null);
   useEffect(() => {
-    const cues = cuesBetween(lastSoundFrame.current, frame, cards);
+    const cues = cuesBetween(lastSoundFrame.current, frame);
     lastSoundFrame.current = frame;
     if (!mutedRef.current) cues.forEach(playCue);
-    // Deliberately only these two: they are the only changes that make a sound.
-  }, [frame.shown, frame.finished]);
+    // Deliberately only this one: it is the only change that makes a whistle.
+  }, [frame.finished]);
+
+  // A goal's two sounds, once each per goal: the goal itself when the ball
+  // hits the net in the scene, and your points when the goal card shows them.
+  const goalT = frame.current ? elapsed - frame.current.atMs : null;
+  const landed =
+    frame.current && goalT! >= ballLandsAt(match.events[frame.current.eventIndex]!.ownGoal)
+      ? frame.current.eventIndex
+      : null;
+  const cardShown = frame.current && goalT! >= SCENE_MS ? frame.current.eventIndex : null;
+  const soundedNets = useRef(new Set<number>());
+  const soundedPoints = useRef(new Set<number>());
+  useEffect(() => {
+    if (landed === null || soundedNets.current.has(landed)) return;
+    soundedNets.current.add(landed);
+    if (!mutedRef.current) goalCues().forEach(playCue);
+  }, [landed]);
+  useEffect(() => {
+    if (cardShown === null || soundedPoints.current.has(cardShown)) return;
+    soundedPoints.current.add(cardShown);
+    if (!mutedRef.current) pointsCues(cards[cardShown]!).forEach(playCue);
+  }, [cardShown, cards]);
 
   const toggleMute = () => {
     const next = !muted;
@@ -105,6 +127,13 @@ export function MatchAnimation({ match, view, onDone }: MatchAnimationProps) {
   const current = frame.current ? match.events[frame.current.eventIndex] : null;
   const currentTeam = current && (current.team === "home" ? match.homeTeam : match.awayTeam);
   const currentCard = frame.current ? cards[frame.current.eventIndex]! : null;
+  // Each goal opens with its scene (sceneFrames.ts), then the goal card.
+  const sceneT = frame.current ? elapsed - frame.current.atMs : SCENE_MS;
+  const showScene = current !== null && sceneT < SCENE_MS;
+  // The scorer plays for the other team on an own goal.
+  const scorerTeam =
+    current && (current.team === "home") !== current.ownGoal ? match.homeTeam : match.awayTeam;
+  const scorerNumber = current ? scorerTeam.players.find((p) => p.id === current.scorer)?.number ?? 0 : 0;
   // Your points so far: each goal's points as it happens, and the result's at full time.
   const points =
     shownGoals.reduce((sum, g) => sum + cards[g.eventIndex]!.points, 0) +
@@ -172,7 +201,17 @@ export function MatchAnimation({ match, view, onDone }: MatchAnimationProps) {
 
       {/* The goal being shown right now. aria-live reads it out to screen readers. */}
       <div className="anim-goal-slot" aria-live="polite">
-        {current && currentTeam && currentCard && (
+        {showScene && current && (
+          <GoalScene
+            scorerColors={scorerTeam.colors}
+            number={scorerNumber}
+            target={shotTarget(frame.current!.eventIndex)}
+            crowd={[match.homeTeam.colors, match.awayTeam.colors]}
+            t={sceneT}
+            ownGoal={current.ownGoal}
+          />
+        )}
+        {!showScene && current && currentTeam && currentCard && (
           <div
             className={`anim-goal${currentCard.badge ? ` ${currentCard.badge}` : ""}`}
             key={frame.current!.eventIndex}

@@ -1,6 +1,6 @@
 // What the match animation should sound like (SPEC 4), as pure functions:
-// which sounds ("cues") to play between two animation frames, and the
-// player's mute setting. The sounds themselves are made in synth.ts.
+// which sounds ("cues") to play, and the player's mute setting. The sounds
+// themselves are made in synth.ts.
 
 import type { GoalCard } from "./results";
 import type { StorageLike } from "./savedGuess";
@@ -14,24 +14,30 @@ export type Cue =
   | "final-whistle"; // three whistles at full time
 
 /**
- * The sounds to play when the animation moves from `prev` to `next`
- * (`prev` is null on the very first frame). `cards` is each real goal's
- * result card, in time order (cardsByEvent).
+ * The whistles: kick-off on the first frame (`prev` is null) and the final
+ * whistle when the animation reaches full time. A goal's sounds come from
+ * goalCues and pointsCues.
  */
-export function cuesBetween(prev: TimelineFrame | null, next: TimelineFrame, cards: GoalCard[]): Cue[] {
+export function cuesBetween(prev: TimelineFrame | null, next: TimelineFrame): Cue[] {
   const cues: Cue[] = [];
   if (prev === null) cues.push("kickoff");
-
-  // Every goal that appeared since the last frame (usually one, but a big
-  // jump, e.g. at 2x, can show more than one at once).
-  for (let i = prev?.shown ?? 0; i < next.shown; i++) {
-    cues.push("goal");
-    const card = cards[i];
-    if (card?.outcome === "hit") cues.push(card.badge === "full-house" ? "full-house" : "hit");
-  }
-
   if (next.finished && !prev?.finished) cues.push("final-whistle");
   return cues;
+}
+
+/** The sound of the goal itself, the moment the ball hits the net in the scene. */
+export function goalCues(): Cue[] {
+  return ["goal"];
+}
+
+/**
+ * The sound of YOUR points on a goal, played when the goal card shows them
+ * (✓ +3, the points sticker): a ding if you got something right, a rising
+ * tune for a full house, nothing otherwise.
+ */
+export function pointsCues(card: GoalCard): Cue[] {
+  if (card.outcome !== "hit") return [];
+  return [card.badge === "full-house" ? "full-house" : "hit"];
 }
 
 export const MUTED_KEY = "scordle:muted";

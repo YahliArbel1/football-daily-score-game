@@ -10,10 +10,13 @@ import type { Match, Score, Side } from "../engine/types";
 
 /** How long the clock takes to run from 0' to full time, without pauses. */
 export const RUN_MS = 10000;
-/** The longest pause on one goal: long enough to read the goal card and your hits. */
-export const MAX_GOAL_PAUSE_MS = 4000;
-/** All goal pauses together never take longer than this, so even 8 goals stay under 35 s. */
-export const PAUSE_BUDGET_MS = 24000;
+/**
+ * The longest pause on one goal: the goal scene (2.8 s), then enough time to
+ * read the goal card and your hits.
+ */
+export const MAX_GOAL_PAUSE_MS = 6000;
+/** All goal pauses together never take longer than this, so even 8 goals stay around 50 s. */
+export const PAUSE_BUDGET_MS = 40000;
 
 export interface TimelineGoal {
   /** Index into match.events. */

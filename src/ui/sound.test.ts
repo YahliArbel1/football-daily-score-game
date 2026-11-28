@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { istanbul2005, istanbul2005Guess } from "../engine/fixtures/istanbul-2005";
 import { buildResults, cardsByEvent } from "./results";
-import { cuesBetween, loadMuted, MUTED_KEY, saveMuted } from "./sound";
+import { cuesBetween, goalCues, loadMuted, MUTED_KEY, pointsCues, saveMuted } from "./sound";
 import type { StorageLike } from "./savedGuess";
 import type { TimelineFrame } from "./timeline";
 
@@ -19,39 +19,43 @@ const frame = (shown: number, finished = false): TimelineFrame => ({
   finished,
 });
 
-describe("cuesBetween", () => {
+describe("cuesBetween (whistles)", () => {
   it("blows the kick-off whistle on the first frame", () => {
-    expect(cuesBetween(null, frame(0), cards)).toEqual(["kickoff"]);
+    expect(cuesBetween(null, frame(0))).toEqual(["kickoff"]);
   });
 
-  it("plays nothing while the clock just runs", () => {
-    expect(cuesBetween(frame(0), frame(0), cards)).toEqual([]);
-    expect(cuesBetween(frame(2), frame(2), cards)).toEqual([]);
-  });
-
-  it("roars for a goal you missed, with no ding", () => {
-    expect(cuesBetween(frame(0), frame(1), cards)).toEqual(["goal"]); // Maldini
-  });
-
-  it("adds a ding for a goal you hit", () => {
-    expect(cuesBetween(frame(1), frame(2), cards)).toEqual(["goal", "hit"]); // Crespo 39'
-  });
-
-  it("plays the full-house tune instead of the ding", () => {
-    expect(cuesBetween(frame(2), frame(3), cards)).toEqual(["goal", "full-house"]); // Crespo 44'
-  });
-
-  it("gives no ding for a goal you got all wrong", () => {
-    expect(cuesBetween(frame(5), frame(6), cards)).toEqual(["goal"]); // Alonso
-  });
-
-  it("plays every goal that appeared since the last frame", () => {
-    expect(cuesBetween(frame(1), frame(3), cards)).toEqual(["goal", "hit", "goal", "full-house"]);
+  it("plays nothing while the clock runs, goals included (they sound in the scene)", () => {
+    expect(cuesBetween(frame(0), frame(0))).toEqual([]);
+    expect(cuesBetween(frame(1), frame(3))).toEqual([]);
   });
 
   it("blows the final whistle once, at full time", () => {
-    expect(cuesBetween(frame(6), frame(6, true), cards)).toEqual(["final-whistle"]);
-    expect(cuesBetween(frame(6, true), frame(6, true), cards)).toEqual([]);
+    expect(cuesBetween(frame(6), frame(6, true))).toEqual(["final-whistle"]);
+    expect(cuesBetween(frame(6, true), frame(6, true))).toEqual([]);
+  });
+});
+
+describe("goalCues (when the ball hits the net)", () => {
+  it("is the goal sound only: your points come later, with the card", () => {
+    expect(goalCues()).toEqual(["goal"]);
+  });
+});
+
+describe("pointsCues (when the goal card shows your points)", () => {
+  it("is silent for a goal you missed", () => {
+    expect(pointsCues(cards[0]!)).toEqual([]); // Maldini
+  });
+
+  it("dings for a goal you hit", () => {
+    expect(pointsCues(cards[1]!)).toEqual(["hit"]); // Crespo 39'
+  });
+
+  it("plays the full-house tune instead of the ding", () => {
+    expect(pointsCues(cards[2]!)).toEqual(["full-house"]); // Crespo 44'
+  });
+
+  it("is silent for a goal you got all wrong", () => {
+    expect(pointsCues(cards[5]!)).toEqual([]); // Alonso
   });
 });
 

@@ -11,8 +11,6 @@ import type { Cue } from "./sound";
 
 /** Overall volume, so the sounds never get loud. */
 const MASTER_VOLUME = 0.5;
-/** The ding comes a moment after the roar starts, as the ✓ marks pop in. */
-const HIT_DELAY = 0.6;
 
 let context: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -102,11 +100,12 @@ export function playCue(cue: Cue): void {
       // No sound yet: a synthesized crowd sounded like white noise. A real
       // recording will go here, with a license that allows a public repo (CC0).
       break;
+    // Played when the goal card shows your points (see pointsCues in sound.ts).
     case "hit":
-      notes(ctx, out, now + HIT_DELAY, [880, 1318.5], 0.12); // A5, E6
+      notes(ctx, out, now, [880, 1318.5], 0.12); // A5, E6
       break;
     case "full-house":
-      notes(ctx, out, now + HIT_DELAY, [1046.5, 1318.5, 1568, 2093], 0.1); // C6 E6 G6 C7
+      notes(ctx, out, now, [1046.5, 1318.5, 1568, 2093], 0.1); // C6 E6 G6 C7
       break;
     case "final-whistle":
       // Like a real referee: two short blasts and a long one.
