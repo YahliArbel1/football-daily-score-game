@@ -45,6 +45,14 @@ button {
   color: inherit;
 }
 
+/* Pixel-art symbols (PixelIcon): about the height of a capital letter. */
+.pixel-icon {
+  width: 0.8em;
+  height: 0.8em;
+  vertical-align: -0.05em;
+  flex-shrink: 0;
+}
+
 .pixel {
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.6);
   font-family: var(--font-pixel);
@@ -188,6 +196,11 @@ button {
   border-radius: 4px;
   color: var(--muted);
   background: rgba(255, 255, 255, 0.06);
+}
+
+/* The "live" dot in "● Today #1" blinks, like the LIVE tag in the match animation. */
+.tag.live .pixel-icon {
+  animation: blink 1s steps(2, start) infinite;
 }
 
 .tag.live {
@@ -469,10 +482,21 @@ button {
   box-shadow: none;
 }
 
-.verdict {
+/* "▸ AC Milan win" under the score guess. Its own name: it used to share
+   .verdict with the results banner and picked up that banner's two-column layout. */
+.score-verdict {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
   margin: 22px 0 0;
+  padding: 12px 18px;
   font-size: 0.8rem;
+  text-align: center;
   color: var(--accent);
+  border: 3px solid #050a07;
+  border-radius: 12px;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.45);
 }
 
 /* "Watch again" on the results screen. */

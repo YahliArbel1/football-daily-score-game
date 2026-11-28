@@ -1,6 +1,6 @@
 import { MAX_GOALS_PER_TEAM, type Match, type Score, type Side } from "../engine/types";
 import { changeGoals, describeScore } from "./scoreGuess";
-import { BackButton, colorVars, CompetitionBar } from "./shared";
+import { BackButton, colorVars, CompetitionBar, PixelIcon } from "./shared";
 
 /** A bold plus or minus drawn as SVG, so it looks the same in every font. */
 function StepIcon({ plus }: { plus: boolean }) {
@@ -71,8 +71,8 @@ export function ScoreGuessScreen({ match, score, onChange, onBack, onNext }: Sco
         ))}
       </div>
 
-      <p className="verdict pixel" aria-live="polite">
-        ▸ {describeScore(score, match.homeTeam.name, match.awayTeam.name)}
+      <p className="score-verdict pixel" aria-live="polite">
+        <PixelIcon name="play" /> {describeScore(score, match.homeTeam.name, match.awayTeam.name)}
       </p>
 
       <button type="button" className="arcade-btn primary next-btn" onClick={onNext}>
