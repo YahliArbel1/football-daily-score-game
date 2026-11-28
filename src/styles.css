@@ -198,11 +198,6 @@ button {
   background: rgba(255, 255, 255, 0.06);
 }
 
-/* The "live" dot in "● Today #1" blinks, like the LIVE tag in the match animation. */
-.tag.live .pixel-icon {
-  animation: blink 1s steps(2, start) infinite;
-}
-
 .tag.live {
   color: #fff;
   background: var(--live);
@@ -1236,17 +1231,6 @@ button {
   border-radius: 4px;
 }
 
-/* The pixel font has no "●", so the blinking dot is drawn here. */
-.live-tag::before {
-  content: "";
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  margin-right: 8px;
-  background: #fff;
-  border-radius: 50%;
-  animation: blink 1s steps(2, start) infinite;
-}
 
 /* 🔊 / 🔇 next to the clock. */
 .mute-btn {

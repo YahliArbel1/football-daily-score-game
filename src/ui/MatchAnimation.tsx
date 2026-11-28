@@ -118,7 +118,10 @@ export function MatchAnimation({ match, view, onDone }: MatchAnimationProps) {
         {frame.finished ? (
           <span className="full-time pixel">Full time</span>
         ) : (
-          <span className="live-tag pixel">Live</span>
+          // A still dot, the same as "● Today" on the home page (no blinking: it tires the eyes).
+          <span className="live-tag pixel">
+            <PixelIcon name="dot" /> Live
+          </span>
         )}
         {/* key: a new total re-mounts the number, which replays its pop. */}
         <span className="anim-points pixel" key={points}>
