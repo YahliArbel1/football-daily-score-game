@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Match } from "../engine/types";
 import { cardsByEvent, minuteLabel, playerName, type FieldResult, type ResultsView } from "./results";
 import { browserStorage } from "./savedGuess";
-import { colorVars, CompetitionBar } from "./shared";
+import { colorVars, CompetitionBar, PixelIcon } from "./shared";
 import { cuesBetween, loadMuted, saveMuted } from "./sound";
 import { playCue, stopAll } from "./synth";
 import { advance, buildTimeline, SPEEDS, timelineAt, type Speed, type TimelineFrame } from "./timeline";
@@ -118,7 +118,10 @@ export function MatchAnimation({ match, view, onDone }: MatchAnimationProps) {
         {frame.finished ? (
           <span className="full-time pixel">Full time</span>
         ) : (
-          <span className="live-tag pixel">Live</span>
+          // A still dot, the same as "● Today" on the home page (no blinking: it tires the eyes).
+          <span className="live-tag pixel">
+            <PixelIcon name="dot" /> Live
+          </span>
         )}
         {/* key: a new total re-mounts the number, which replays its pop. */}
         <span className="anim-points pixel" key={points}>
@@ -199,16 +202,26 @@ export function MatchAnimation({ match, view, onDone }: MatchAnimationProps) {
                 <Hit field={currentCard.minuteField} />
               </span>
             )}
-            {currentCard.badge === "full-house" && <span className="badge-full-house pixel">★ Full house!</span>}
-            {currentCard.badge === "pair" && <span className="badge-pair pixel">◆ Pair</span>}
+            {currentCard.badge === "full-house" && (
+              <span className="badge-full-house pixel">
+                <PixelIcon name="star" /> Full house!
+              </span>
+            )}
+            {currentCard.badge === "pair" && (
+              <span className="badge-pair pixel">
+                <PixelIcon name="diamond" /> Pair
+              </span>
+            )}
             {currentCard.outcome === "wrong" && (
               <span className="anim-goal-note wrong">
-                ✗ Your guess: {currentCard.scorer.guess ?? "no scorer"}
+                <PixelIcon name="cross" /> Your guess: {currentCard.scorer.guess ?? "no scorer"}
                 {currentCard.minuteField.guess && ` ${currentCard.minuteField.guess}`}
               </span>
             )}
             {currentCard.outcome === "missed" && (
-              <span className="anim-goal-note missed">✗ You missed this goal</span>
+              <span className="anim-goal-note missed">
+                <PixelIcon name="cross" /> You missed this goal
+              </span>
             )}
           </div>
         )}

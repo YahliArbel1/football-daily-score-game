@@ -1,7 +1,7 @@
 import type { Match } from "../engine/types";
 import { NextDaily } from "./NextDaily";
 import type { FieldResult, GoalCard, ResultsView, TeamResults } from "./results";
-import { colorVars, CompetitionBar, LegalNote } from "./shared";
+import { colorVars, CompetitionBar, LegalNote, PixelIcon } from "./shared";
 
 interface ResultsScreenProps {
   match: Match;
@@ -43,10 +43,22 @@ function GoalResultCard({ card }: { card: GoalCard }) {
           {card.minute}
           {card.ownGoal && <span className="og-tag">OG</span>}
         </span>
-        {card.badge === "full-house" && <span className="badge-full-house pixel">★ Full house!</span>}
-        {card.badge === "pair" && <span className="badge-pair pixel">◆ Pair</span>}
+        {card.badge === "full-house" && (
+          <span className="badge-full-house pixel">
+            <PixelIcon name="star" /> Full house!
+          </span>
+        )}
+        {card.badge === "pair" && (
+          <span className="badge-pair pixel">
+            <PixelIcon name="diamond" /> Pair
+          </span>
+        )}
         {/* You knew of the goal but got it all wrong, or didn't know about it at all. */}
-        {card.outcome === "wrong" && <span className="badge-wrong pixel">✗ All wrong</span>}
+        {card.outcome === "wrong" && (
+          <span className="badge-wrong pixel">
+            <PixelIcon name="cross" /> All wrong
+          </span>
+        )}
         {card.outcome === "missed" && <span className="badge-missed pixel">Missed goal</span>}
         <span className="result-card-points">+{card.points}</span>
       </div>

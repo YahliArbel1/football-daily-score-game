@@ -3,6 +3,24 @@
 import type { CSSProperties } from "react";
 import type { Colors, Match } from "../engine/types";
 import { getCompetitionColors, textColorOn } from "./colors";
+import { ICON_SIZE, iconPath, PIXEL_ICONS, type PixelIconName } from "./pixelIcons";
+
+/**
+ * A pixel-art symbol (▸ ◂ ● ★ ◆ ✗) in the current text color, sized to the
+ * text around it. Decorative: screen readers read the text next to it.
+ */
+export function PixelIcon({ name }: { name: PixelIconName }) {
+  return (
+    <svg
+      className="pixel-icon"
+      viewBox={`0 0 ${ICON_SIZE} ${ICON_SIZE}`}
+      shapeRendering="crispEdges"
+      aria-hidden="true"
+    >
+      <path fill="currentColor" d={iconPath(PIXEL_ICONS[name])} />
+    </svg>
+  );
+}
 
 /** CSS variables that styles.css uses to paint a box in a team's or competition's colors. */
 export function colorVars(colors: Colors): CSSProperties {
@@ -54,7 +72,7 @@ export function LegalNote() {
 export function BackButton({ onClick }: { onClick: () => void }) {
   return (
     <button type="button" className="back pixel" onClick={onClick}>
-      ◂ Back
+      <PixelIcon name="back" /> Back
     </button>
   );
 }

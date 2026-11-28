@@ -97,6 +97,7 @@ try {
       await page.getByRole("button", { name: `One goal more for ${team.name}` }).click();
     }
   }
+  await shot("guess-score");
   await page.getByRole("button", { name: /Next/ }).click();
 
   // ...and the real goals in a pattern that shows every kind of hit. For each
