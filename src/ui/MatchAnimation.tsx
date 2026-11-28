@@ -5,8 +5,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Match } from "../engine/types";
 import { cardsByEvent, minuteLabel, playerName, type FieldResult, type ResultsView } from "./results";
+import { browserStorage } from "./savedGuess";
 import { colorVars, CompetitionBar } from "./shared";
-import { advance, buildTimeline, SPEEDS, timelineAt, type Speed } from "./timeline";
+import { cuesBetween, loadMuted, saveMuted } from "./sound";
+import { playCue, stopAll } from "./synth";
+import { advance, buildTimeline, SPEEDS, timelineAt, type Speed, type TimelineFrame } from "./timeline";
 
 interface MatchAnimationProps {
   match: Match;
@@ -36,10 +39,14 @@ export function MatchAnimation({ match, view, onDone }: MatchAnimationProps) {
   const cards = useMemo(() => cardsByEvent(match, view), [match, view]);
   const [elapsed, setElapsed] = useState(0);
   const [speed, setSpeed] = useState<Speed>(1);
+  // Sounds are on unless the player muted them before (remembered in the browser).
+  const [muted, setMuted] = useState(() => loadMuted(browserStorage()));
 
   // The frame loop reads these through refs, so it never has to restart.
   const speedRef = useRef(speed);
   speedRef.current = speed;
+  const mutedRef = useRef(muted);
+  mutedRef.current = muted;
   const onDoneRef = useRef(onDone);
   onDoneRef.current = onDone;
 
@@ -63,6 +70,29 @@ export function MatchAnimation({ match, view, onDone }: MatchAnimationProps) {
   }, [timeline]);
 
   const frame = timelineAt(timeline, elapsed);
+
+  // Sounds: compare with the last frame that played sounds, and play what's
+  // new (kick-off, a goal, a hit, full time). Only runs when a goal appears or
+  // the match ends, not on every tick.
+  const lastSoundFrame = useRef<TimelineFrame | null>(null);
+  useEffect(() => {
+    const cues = cuesBetween(lastSoundFrame.current, frame, cards);
+    lastSoundFrame.current = frame;
+    if (!mutedRef.current) cues.forEach(playCue);
+    // Deliberately only these two: they are the only changes that make a sound.
+  }, [frame.shown, frame.finished]);
+
+  const toggleMute = () => {
+    const next = !muted;
+    setMuted(next);
+    saveMuted(browserStorage(), next);
+    if (next) stopAll();
+  };
+
+  const skip = () => {
+    stopAll();
+    onDone();
+  };
 
   // At full time, hold the final score for a moment, then open the results.
   useEffect(() => {
@@ -97,6 +127,15 @@ export function MatchAnimation({ match, view, onDone }: MatchAnimationProps) {
         <span className="anim-clock pixel" aria-live="off">
           {frame.clock}
         </span>
+        <button
+          type="button"
+          className="mute-btn"
+          aria-pressed={muted}
+          aria-label={muted ? "Turn sounds on" : "Turn sounds off"}
+          onClick={toggleMute}
+        >
+          {muted ? "🔇" : "🔊"}
+        </button>
       </div>
 
       <div className="final-board anim-board">
@@ -192,7 +231,7 @@ export function MatchAnimation({ match, view, onDone }: MatchAnimationProps) {
             </button>
           ))}
         </div>
-        <button type="button" className="arcade-btn primary anim-btn pixel" onClick={onDone}>
+        <button type="button" className="arcade-btn primary anim-btn pixel" onClick={skip}>
           Skip &gt;&gt;
         </button>
       </div>
