@@ -63,6 +63,22 @@ try {
   const match = getDailyMatch(matches, today);
   console.log(`Match: ${match.homeTeam.name} ${match.finalScore.home}-${match.finalScore.away} ${match.awayTeam.name}`);
 
+  // Report any JavaScript error on the page.
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  // Count the sounds the game starts (tones and noise), without changing the game:
+  // the browser's own Web Audio functions are wrapped, in this test browser only.
+  await page.addInitScript(() => {
+    window.__sounds = 0;
+    for (const name of ["createOscillator", "createBufferSource"]) {
+      const original = AudioContext.prototype[name];
+      AudioContext.prototype[name] = function (...args) {
+        window.__sounds++;
+        return original.apply(this, args);
+      };
+    }
+  });
+
   // A fresh browser has no saved guess, so the Daily Game starts from the home page.
   await page.clock.install({ time: today });
   await page.goto(url);
@@ -133,6 +149,8 @@ try {
     await shot(`anim-${String(ms).padStart(5, "0")}ms`);
   }
 
+  console.log(`Sounds started during the animation: ${await page.evaluate(() => window.__sounds)}`);
+
   console.log("Results:");
   await shot("results", true);
   // Close-ups of one card header per kind of goal, to check small text.
@@ -149,6 +167,23 @@ try {
   const clock = await page.locator(".anim-clock").textContent();
   console.log(`Watch again: the clock shows ${clock}`);
   await shot("replay-start");
+
+  // Muting must be remembered: mute, reload, open today's game again (the
+  // saved guess opens the results), Watch again: the button must still be on mute.
+  const mute = page.locator(".mute-btn");
+  await mute.click();
+  await page.reload();
+  await page.getByRole("button", { name: /Daily Game/ }).click();
+  await page.getByRole("button", { name: /Watch again/ }).click();
+  console.log(`Mute after a reload: ${(await mute.getAttribute("aria-pressed")) === "true" ? "kept" : "LOST"}`);
+  await shot("muted");
+
+  if (errors.length) {
+    console.log(`JavaScript errors:\n  ${errors.join("\n  ")}`);
+    process.exitCode = 1;
+  } else {
+    console.log("No JavaScript errors.");
+  }
 } finally {
   await browser.close();
   await server.close();
