@@ -200,6 +200,26 @@ button {
   font-size: 0.75rem;
 }
 
+/* Fine print at the bottom of the home and results screens (LegalNote). */
+.legal-note {
+  margin-top: 32px;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--muted);
+  opacity: 0.8;
+}
+
+.legal-note a {
+  color: var(--muted);
+  text-decoration: underline;
+}
+
+.legal-note a:hover,
+.legal-note a:focus-visible {
+  color: var(--text);
+}
+
 /* ---------- Match intro ---------- */
 
 .back {
