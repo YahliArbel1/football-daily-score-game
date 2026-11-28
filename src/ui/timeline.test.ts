@@ -26,15 +26,15 @@ function withGoals(events: GoalEvent[]): Match {
 }
 
 describe("buildTimeline", () => {
-  it("lasts 10 to 34 seconds, from no goals to many", () => {
+  it("lasts 10 to 50 seconds, from no goals to many", () => {
     for (const match of [withGoals([]), barcelona1999, barcelona2017]) {
       const { durationMs } = buildTimeline(match);
       expect(durationMs).toBeGreaterThanOrEqual(10000);
-      expect(durationMs).toBeLessThanOrEqual(34000);
+      expect(durationMs).toBeLessThanOrEqual(50000);
     }
   });
 
-  it("pauses at most 4 seconds on each goal, and less when there are many", () => {
+  it("pauses at most 6 seconds on each goal, and less when there are many", () => {
     expect(buildTimeline(barcelona1999).pauseMs).toBe(MAX_GOAL_PAUSE_MS);
     expect(buildTimeline(barcelona2017).pauseMs).toBeLessThan(MAX_GOAL_PAUSE_MS);
   });

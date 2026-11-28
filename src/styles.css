@@ -1302,6 +1302,16 @@ button {
   animation: pop 0.3s ease-out both;
 }
 
+/* The goal scene: pixel art scaled up with sharp edges. */
+.goal-scene {
+  display: block;
+  margin: 0 auto;
+  image-rendering: pixelated;
+  border: 3px solid #050a07;
+  border-radius: 12px;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.45);
+}
+
 /* Keeps its height when empty, so the page doesn't jump between goals. */
 .anim-goal-slot {
   min-height: 150px;
