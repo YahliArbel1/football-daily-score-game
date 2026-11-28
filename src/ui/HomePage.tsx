@@ -1,3 +1,5 @@
+import { LegalNote } from "./shared";
+
 interface HomePageProps {
   /** Today's Daily Game label, e.g. "#1 · NOV 27". */
   label: string;
@@ -34,6 +36,8 @@ export function HomePage({ label, played, onPlayDaily }: HomePageProps) {
           <span className="mode-text">Random matches, as many as you like.</span>
         </button>
       </div>
+
+      <LegalNote />
     </main>
   );
 }

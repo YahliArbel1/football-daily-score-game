@@ -35,6 +35,22 @@ export function CompetitionBar({ match }: { match: Match }) {
   );
 }
 
+/**
+ * The fine print at the bottom of the home and results screens: Scordle is not
+ * official, and a link to the third-party notices (font licenses), which the
+ * fonts' license (OFL) asks us to ship with them.
+ */
+export function LegalNote() {
+  // BASE_URL is "/scordle/" on GitHub Pages; files in public/ are served from there.
+  const notices = `${import.meta.env.BASE_URL}THIRD-PARTY-NOTICES.txt`;
+  return (
+    <footer className="legal-note">
+      Scordle is an independent fan game, not affiliated with or endorsed by UEFA, FIFA or any club
+      or player. · <a href={notices}>Credits</a>
+    </footer>
+  );
+}
+
 export function BackButton({ onClick }: { onClick: () => void }) {
   return (
     <button type="button" className="back pixel" onClick={onClick}>

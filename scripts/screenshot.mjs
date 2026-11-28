@@ -178,6 +178,16 @@ try {
   console.log(`Mute after a reload: ${(await mute.getAttribute("aria-pressed")) === "true" ? "kept" : "LOST"}`);
   await shot("muted");
 
+  // The "Credits" link at the bottom of the home page must open the notices file.
+  await page.goto(url);
+  const credits = page.getByRole("link", { name: "Credits" });
+  const response = await page.request.get(new URL(await credits.getAttribute("href"), url).href);
+  const notices = await response.text();
+  console.log(
+    `Credits link: HTTP ${response.status()}, ${notices.includes("SIL OPEN FONT LICENSE") ? "has the font license" : "MISSING the font license"}`,
+  );
+  await shot("home", true);
+
   if (errors.length) {
     console.log(`JavaScript errors:\n  ${errors.join("\n  ")}`);
     process.exitCode = 1;

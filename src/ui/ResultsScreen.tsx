@@ -1,7 +1,7 @@
 import type { Match } from "../engine/types";
 import { NextDaily } from "./NextDaily";
 import type { FieldResult, GoalCard, ResultsView, TeamResults } from "./results";
-import { colorVars, CompetitionBar } from "./shared";
+import { colorVars, CompetitionBar, LegalNote } from "./shared";
 
 interface ResultsScreenProps {
   match: Match;
@@ -188,6 +188,8 @@ export function ResultsScreen({ match, view, day, label, onHome, onReplay }: Res
       <button type="button" className="arcade-btn primary next-btn" onClick={onHome}>
         <span className="mode-title">Back to home</span>
       </button>
+
+      <LegalNote />
     </main>
   );
 }
